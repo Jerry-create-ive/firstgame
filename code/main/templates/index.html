@@ -33,8 +33,21 @@
             height: 100%;
             background-size: cover;
             background-position: center;
-            opacity: 0.3;
+            opacity: 0.9;
             transition: opacity 1s ease;
+        }
+        
+        #bg-error {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(196, 30, 58, 0.9);
+            padding: 10px 20px;
+            border-radius: 4px;
+            color: #fff;
+            font-size: 0.9em;
+            z-index: 100;
+            display: none;
         }
 
         #content-area {
@@ -292,6 +305,8 @@
         <div id="background"></div>
         
         <div id="fade-overlay"></div>
+        
+        <div id="bg-error"></div>
 
         <div id="start-screen">
             <h1 id="start-title">太行残雪</h1>
@@ -995,11 +1010,25 @@
 
         function fadeToBackground(index) {
             const overlay = document.getElementById('fade-overlay');
+            const bgElement = document.getElementById('background');
+            const errorElement = document.getElementById('bg-error');
+            
             overlay.classList.add('fade-in');
             
             setTimeout(() => {
-                document.getElementById('background').style.backgroundImage = `url(${backgrounds[index]})`;
-                overlay.classList.remove('fade-in');
+                const img = new Image();
+                img.onload = function() {
+                    bgElement.style.backgroundImage = `url(${backgrounds[index]})`;
+                    errorElement.style.display = 'none';
+                    overlay.classList.remove('fade-in');
+                };
+                img.onerror = function() {
+                    errorElement.textContent = `⚠️ 无法加载背景图: ${backgrounds[index]}`;
+                    errorElement.style.display = 'block';
+                    bgElement.style.background = 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)';
+                    overlay.classList.remove('fade-in');
+                };
+                img.src = backgrounds[index];
             }, 400);
         }
 
