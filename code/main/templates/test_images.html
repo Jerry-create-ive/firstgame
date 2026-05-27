@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图片加载测试</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Microsoft YaHei', sans-serif; background: #1a1a2e; color: #e8e8e8; padding: 20px; }
+        
+        h1 { text-align: center; color: #c41e3a; margin-bottom: 30px; }
+        
+        .test-section {
+            max-width: 1200px;
+            margin: 0 auto 40px;
+            padding: 20px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+            border: 1px solid rgba(196, 30, 58, 0.3);
+        }
+        
+        .test-section h2 {
+            color: #ffd700;
+            margin-bottom: 20px;
+            font-size: 1.2em;
+        }
+        
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+        
+        .image-item {
+            position: relative;
+            aspect-ratio: 4/3;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+        
+        .image-item.loading {
+            border-color: #ffd700;
+            background: linear-gradient(90deg, #2d2d44, #1a1a2e, #2d2d44);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+        }
+        
+        .image-item.success {
+            border-color: #4CAF50;
+        }
+        
+        .image-item.error {
+            border-color: #c41e3a;
+            background: #2d2d44;
+        }
+        
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
+        .image-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .image-item .overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 8px;
+            background: rgba(0,0,0,0.7);
+            text-align: center;
+            font-size: 0.85em;
+        }
+        
+        .image-item .status {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #ffd700;
+        }
+        
+        .image-item.success .status { background: #4CAF50; }
+        .image-item.error .status { background: #c41e3a; }
+        
+        .preview-section {
+            height: 400px;
+            position: relative;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            border: 2px solid rgba(196, 30, 58, 0.3);
+        }
+        
+        #preview-bg {
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            transition: background-image 1s ease;
+        }
+        
+        .preview-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .preview-overlay h3 {
+            font-size: 2em;
+            margin-bottom: 10px;
+            color: #fff;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        }
+        
+        .preview-overlay p {
+            color: #e8e8e8;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .control-btn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #2d2d44 0%, #1a1a2e 100%);
+            border: 1px solid rgba(196, 30, 58, 0.6);
+            border-radius: 6px;
+            color: #e8e8e8;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .control-btn:hover {
+            background: linear-gradient(135deg, #c41e3a 0%, #8b0000 100%);
+            border-color: #c41e3a;
+        }
+        
+        .control-btn.active {
+            background: linear-gradient(135deg, #c41e3a 0%, #8b0000 100%);
+            border-color: #c41e3a;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 20px;
+            font-size: 0.9em;
+        }
+        
+        .stat-item { text-align: center; }
+        .stat-value { font-size: 1.5em; font-weight: bold; }
+        .stat-success { color: #4CAF50; }
+        .stat-error { color: #c41e3a; }
+        .stat-total { color: #ffd700; }
+        
+        #auto-play {
+            background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%);
+            border-color: #4CAF50;
+        }
+        
+        #auto-play:hover {
+            background: linear-gradient(135deg, #388E3C 0%, #1B5E20 100%);
+        }
+        
+        .fade-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: black;
+            opacity: 0;
+            z-index: 10;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+        
+        .fade-overlay.active { opacity: 1; }
+    </style>
+</head>
+<body>
+    <h1>🎮 图片加载测试</h1>
+    
+    <!-- 背景预览区域 -->
+    <div class="test-section">
+        <h2>📷 背景预览（模拟游戏切换效果）</h2>
+        <div class="preview-section">
+            <div id="preview-bg"></div>
+            <div class="preview-overlay">
+                <h3 id="bg-title">选择背景图</h3>
+                <p id="bg-info">点击下方按钮切换背景</p>
+            </div>
+            <div class="fade-overlay" id="fade-overlay"></div>
+        </div>
+        
+        <div class="controls">
+            <button class="control-btn" onclick="showImage(0)">1.jpg</button>
+            <button class="control-btn" onclick="showImage(1)">2.jpg</button>
+            <button class="control-btn" onclick="showImage(2)">3.jpg</button>
+            <button class="control-btn" onclick="showImage(3)">4.jpg</button>
+            <button class="control-btn" onclick="showImage(4)">5.jpg</button>
+            <button class="control-btn" onclick="showImage(5)">6.jpg</button>
+            <button class="control-btn" onclick="showImage(6)">7.jpg</button>
+            <button class="control-btn" onclick="showImage(7)">8.jpg</button>
+            <button class="control-btn" onclick="showImage(8)">9.jpg</button>
+            <button class="control-btn" onclick="showImage(9)">10.jpg</button>
+            <button class="control-btn" onclick="showImage(10)">11.jpg</button>
+            <button class="control-btn" onclick="showImage(11)">12.jpg</button>
+            <button class="control-btn" onclick="showImage(12)">13.jpg</button>
+            <button class="control-btn" onclick="showImage(13)">14.jpg</button>
+            <button class="control-btn" onclick="showImage(14)">15.jpg</button>
+            <button class="control-btn" onclick="showImage(15)">16.jpg</button>
+            <button class="control-btn" id="auto-play" onclick="toggleAutoPlay()">▶ 自动播放</button>
+        </div>
+        
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-value stat-success" id="success-count">0</div>
+                <div>加载成功</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value stat-error" id="error-count">0</div>
+                <div>加载失败</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value stat-total" id="total-count">16</div>
+                <div>总图片数</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 图片缩略图区域 -->
+    <div class="test-section">
+        <h2>🖼️ 图片缩略图（显示加载状态）</h2>
+        <div class="gallery" id="gallery"></div>
+    </div>
+    
+    <script>
+        const backgrounds = [
+            '/static/image/1.jpg',
+            '/static/image/2.jpg',
+            '/static/image/3.jpg',
+            '/static/image/4.jpg',
+            '/static/image/5.jpg',
+            '/static/image/6.jpg',
+            '/static/image/7.jpg',
+            '/static/image/8.jpg',
+            '/static/image/9.jpg',
+            '/static/image/10.jpg',
+            '/static/image/11.jpg',
+            '/static/image/12.jpg',
+            '/static/image/13.jpg',
+            '/static/image/14.jpg',
+            '/static/image/15.jpg',
+            '/static/image/16.jpg'
+        ];
+        
+        const sceneNames = [
+            '序章/第一章开头', '第一章抉择', '第二章岩洞', '口粮抉择',
+            '百姓遇险', '第三章山路', '奸细甄别', '险坡危索',
+            '绳索加固', '炮火来袭', '伤员安置', '断后任务',
+            '生死绝境', '将星陨落', '炮弹来袭', '终章结局'
+        ];
+        
+        let currentIndex = -1;
+        let autoPlayInterval = null;
+        let successCount = 0;
+        let errorCount = 0;
+        
+        function initGallery() {
+            const gallery = document.getElementById('gallery');
+            
+            backgrounds.forEach((src, index) => {
+                const item = document.createElement('div');
+                item.className = 'image-item loading';
+                item.innerHTML = `
+                    <div class="status"></div>
+                    <div class="overlay">${index + 1}.jpg</div>
+                `;
+                
+                const img = new Image();
+                img.onload = () => {
+                    item.innerHTML = `
+                        <img src="${src}" alt="${index + 1}.jpg">
+                        <div class="status"></div>
+                        <div class="overlay">${index + 1}.jpg ✓</div>
+                    `;
+                    item.classList.remove('loading');
+                    item.classList.add('success');
+                    successCount++;
+                    updateStats();
+                };
+                img.onerror = () => {
+                    item.innerHTML = `
+                        <div class="status"></div>
+                        <div class="overlay">${index + 1}.jpg ✗</div>
+                    `;
+                    item.classList.remove('loading');
+                    item.classList.add('error');
+                    errorCount++;
+                    updateStats();
+                };
+                img.src = src;
+                
+                item.onclick = () => showImage(index);
+                gallery.appendChild(item);
+            });
+        }
+        
+        function showImage(index) {
+            if (currentIndex === index) return;
+            
+            const fadeOverlay = document.getElementById('fade-overlay');
+            const previewBg = document.getElementById('preview-bg');
+            
+            fadeOverlay.classList.add('active');
+            
+            setTimeout(() => {
+                const img = new Image();
+                img.onload = () => {
+                    previewBg.style.backgroundImage = `url(${backgrounds[index]})`;
+                    document.getElementById('bg-title').textContent = `${index + 1}.jpg`;
+                    document.getElementById('bg-info').textContent = sceneNames[index];
+                    currentIndex = index;
+                    
+                    setTimeout(() => {
+                        fadeOverlay.classList.remove('active');
+                    }, 50);
+                };
+                img.onerror = () => {
+                    previewBg.style.backgroundImage = `linear-gradient(135deg, #1a1a2e, #16213e)`;
+                    document.getElementById('bg-title').textContent = `${index + 1}.jpg`;
+                    document.getElementById('bg-info').textContent = '⚠️ 图片加载失败';
+                    currentIndex = index;
+                    
+                    setTimeout(() => {
+                        fadeOverlay.classList.remove('active');
+                    }, 50);
+                };
+                img.src = backgrounds[index];
+            }, 400);
+            
+            updateControlButtons(index);
+        }
+        
+        function updateControlButtons(activeIndex) {
+            document.querySelectorAll('.control-btn').forEach((btn, index) => {
+                btn.classList.toggle('active', index === activeIndex);
+            });
+        }
+        
+        function updateStats() {
+            document.getElementById('success-count').textContent = successCount;
+            document.getElementById('error-count').textContent = errorCount;
+        }
+        
+        function toggleAutoPlay() {
+            const btn = document.getElementById('auto-play');
+            
+            if (autoPlayInterval) {
+                clearInterval(autoPlayInterval);
+                autoPlayInterval = null;
+                btn.textContent = '▶ 自动播放';
+            } else {
+                autoPlayInterval = setInterval(() => {
+                    const nextIndex = (currentIndex + 1) % backgrounds.length;
+                    showImage(nextIndex);
+                }, 3000);
+                btn.textContent = '⏸ 暂停播放';
+            }
+        }
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            initGallery();
+            // 默认显示第一张图
+            setTimeout(() => showImage(0), 500);
+        });
+    </script>
+</body>
+</html>
