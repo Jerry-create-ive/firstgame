@@ -310,22 +310,69 @@
         ];
         
         const sceneBackgroundMap = {
-            'start': 0, 'chapter1_1': 0, 'chapter1_2': 0, 'chapter1_3': 0,
-            'chapter1_4': 1, 'node1_1': 1, 'node1_2': 1, 'node1_3': 1,
-            'transition1_1': 1, 'transition1_2': 2, 'chapter2_1': 2, 'chapter2_2': 2,
-            'chapter2_3': 2, 'chapter2_4': 3, 'node2_1': 3, 'node2_2': 3,
-            'node2_3': 3, 'transition2_1': 3, 'chapter2_5': 4, 'chapter2_6': 4,
-            'node3_1': 4, 'node3_2': 4, 'node3_3': 4, 'transition3_1': 5,
-            'chapter3_1': 5, 'chapter3_2': 5, 'chapter3_3': 6, 'node4_1': 6,
-            'node4_2': 6, 'node4_3': 6, 'transition4_1': 7, 'chapter3_4': 7,
-            'chapter3_5': 7, 'node5_1': 8, 'node5_2': 8, 'node5_3': 8,
-            'transition5_1': 9, 'chapter4_1': 9, 'chapter4_2': 9, 'node6_1': 10,
-            'node6_2': 10, 'node6_3': 10, 'transition6_1': 11, 'chapter4_3': 11,
-            'node7_1': 11, 'node7_2': 11, 'node7_3': 11, 'transition7_1': 12,
-            'chapter5_1': 12, 'chapter5_2': 12, 'node8_1': 13, 'node8_2': 13,
-            'node8_3': 13, 'transition8_1': 13, 'chapter5_3': 14, 'node9_1': 14,
-            'node9_2': 14, 'node9_3': 14, 'transition9_1': 15, 'chapter_end': 15,
-            'node10_1': 16, 'node10_2': 16, 'node10_3': 16
+            'start': 0,
+            'chapter1_1': 1,
+            'chapter1_2': 1,
+            'chapter1_3': 1,
+            'chapter1_4': 1,
+            'node1_1': 2,
+            'node1_2': 2,
+            'node1_3': 2,
+            'transition1_1': 2,
+            'transition1_2': 3,
+            'chapter2_1': 3,
+            'chapter2_2': 3,
+            'chapter2_3': 3,
+            'chapter2_4': 4,
+            'node2_1': 4,
+            'node2_2': 4,
+            'node2_3': 4,
+            'transition2_1': 5,
+            'chapter2_5': 5,
+            'chapter2_6': 5,
+            'node3_1': 5,
+            'node3_2': 5,
+            'node3_3': 5,
+            'transition3_1': 6,
+            'chapter3_1': 6,
+            'chapter3_2': 6,
+            'chapter3_3': 6,
+            'node4_1': 6,
+            'node4_2': 6,
+            'node4_3': 6,
+            'transition4_1': 7,
+            'chapter3_4': 7,
+            'chapter3_5': 7,
+            'node5_1': 7,
+            'node5_2': 7,
+            'node5_3': 7,
+            'transition5_1': 8,
+            'chapter4_1': 8,
+            'chapter4_2': 8,
+            'node6_1': 8,
+            'node6_2': 8,
+            'node6_3': 8,
+            'transition6_1': 9,
+            'chapter4_3': 9,
+            'node7_1': 9,
+            'node7_2': 9,
+            'node7_3': 9,
+            'transition7_1': 10,
+            'chapter5_1': 10,
+            'chapter5_2': 10,
+            'node8_1': 10,
+            'node8_2': 10,
+            'node8_3': 10,
+            'transition8_1': 11,
+            'chapter5_3': 11,
+            'node9_1': 11,
+            'node9_2': 11,
+            'node9_3': 11,
+            'transition9_1': 12,
+            'chapter_end': 13,
+            'node10_1': 14,
+            'node10_2': 15,
+            'node10_3': 16
         };
         
         const storyData = {
@@ -584,8 +631,11 @@
             
             setTimeout(() => {
                 const img = new Image();
+                const cacheBuster = '?v=' + new Date().getTime();
+                const imageUrl = backgrounds[index] + cacheBuster;
+                
                 img.onload = function() {
-                    bgElement.style.backgroundImage = `url(${backgrounds[index]})`;
+                    bgElement.style.backgroundImage = `url(${imageUrl})`;
                     errorElement.style.display = 'none';
                     overlay.classList.remove('fade-in');
                 };
@@ -595,7 +645,7 @@
                     errorElement.style.display = 'block';
                     overlay.classList.remove('fade-in');
                 };
-                img.src = backgrounds[index];
+                img.src = imageUrl;
             }, 400);
         }
         
