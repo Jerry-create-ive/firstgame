@@ -1,9 +1,19 @@
 import os
+import random
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-change-this-in-production-@#$%^&*()')
+def _get_secret_key():
+    secret_key = os.environ.get('DJANGO_SECRET_KEY')
+    if secret_key:
+        return secret_key
+    if not DEBUG:
+        raise ValueError("DJANGO_SECRET_KEY environment variable must be set in production")
+    chars = 'abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)'
+    return ''.join(random.choice(chars) for _ in range(64))
+
+SECRET_KEY = _get_secret_key()
 
 DEBUG = True
 
@@ -104,9 +114,8 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'),
     os.path.join(BASE_DIR, 'main', 'static'),
-] if os.path.exists(BASE_DIR / 'static') else []
+]
 
 STATICFILES_FINDERS = [
     'django.contrib.staticfiles.finders.FileSystemFinder',
