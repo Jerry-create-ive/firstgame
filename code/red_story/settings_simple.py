@@ -4,7 +4,7 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 DEBUG = True
-SECRET_KEY = 'dev-secret-key-change-in-production'
+SECRET_KEY = 'test-secret-key-for-development-only'
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
@@ -41,10 +41,10 @@ DATABASES = {
     }
 }
 
-STATIC_URL = '/static/'
+STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [
-    BASE_DIR / 'main' / 'static',
+    os.path.join(BASE_DIR, 'main', 'static'),
 ]
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
