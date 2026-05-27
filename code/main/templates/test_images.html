@@ -230,6 +230,7 @@
             <button class="control-btn" onclick="showImage(13)">14.jpg</button>
             <button class="control-btn" onclick="showImage(14)">15.jpg</button>
             <button class="control-btn" onclick="showImage(15)">16.jpg</button>
+            <button class="control-btn" onclick="showImage(16)">17.jpg</button>
             <button class="control-btn" id="auto-play" onclick="toggleAutoPlay()">▶ 自动播放</button>
         </div>
         
@@ -243,7 +244,7 @@
                 <div>加载失败</div>
             </div>
             <div class="stat-item">
-                <div class="stat-value stat-total" id="total-count">16</div>
+                <div class="stat-value stat-total" id="total-count">17</div>
                 <div>总图片数</div>
             </div>
         </div>
@@ -272,14 +273,15 @@
             '/static/image/13.jpg',
             '/static/image/14.jpg',
             '/static/image/15.jpg',
-            '/static/image/16.jpg'
+            '/static/image/16.jpg',
+            '/static/image/17.jpg'
         ];
         
         const sceneNames = [
             '序章/第一章开头', '第一章抉择', '第二章岩洞', '口粮抉择',
             '百姓遇险', '第三章山路', '奸细甄别', '险坡危索',
             '绳索加固', '炮火来袭', '伤员安置', '断后任务',
-            '生死绝境', '将星陨落', '炮弹来袭', '终章结局'
+            '生死绝境', '将星陨落', '炮弹来袭', '终章结局', '结局展示'
         ];
         
         let currentIndex = -1;

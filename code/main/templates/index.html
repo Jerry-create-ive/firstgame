@@ -3,228 +3,292 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>太行残雪 - 视觉小说</title>
+    <title>血色征程 - 太行突围</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'SimSun', 'STSong', serif; background: #1a1a2e; color: #e8e8e8; overflow: hidden; }
-        
-        #game-container {
-            width: 100vw;
-            height: 100vh;
-            position: relative;
-        }
+        body { font-family: 'Microsoft YaHei', 'SimHei', sans-serif; overflow: hidden; }
         
         #background {
-            position: absolute;
+            position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
             background-size: cover;
             background-position: center;
-            opacity: 0.9;
-            transition: opacity 1s ease;
+            z-index: -1;
+            transition: background-image 1s ease;
         }
         
         #fade-overlay {
-            position: absolute;
+            position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
             background: black;
             opacity: 0;
-            z-index: 50;
+            z-index: 100;
             pointer-events: none;
-            transition: opacity 0.8s ease;
+            transition: opacity 0.5s ease;
         }
         
-        .fade-in { opacity: 1 !important; }
+        #fade-overlay.fade-in { opacity: 1; }
         
-        #content-area {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 60%;
-            background: linear-gradient(to top, rgba(0,0,0,0.95), rgba(0,0,0,0.8), rgba(0,0,0,0));
-            padding: 30px;
-            overflow-y: auto;
+        #bg-error {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            padding: 10px 20px;
+            background: rgba(196, 30, 58, 0.9);
+            color: white;
+            border-radius: 5px;
+            font-size: 14px;
+            z-index: 50;
+            display: none;
         }
-        
-        #text-box {
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 20px 30px;
-            background: rgba(26, 26, 46, 0.9);
-            border: 1px solid rgba(196, 30, 58, 0.5);
-            border-radius: 8px;
-        }
-        
-        #chapter-title { color: #c41e3a; font-size: 1.2em; font-weight: bold; margin-bottom: 15px; text-align: center; letter-spacing: 4px; }
-        #narrator { color: #ffd700; font-size: 0.9em; margin-bottom: 10px; font-style: italic; }
-        #dialogue { font-size: 1.1em; line-height: 1.8; color: #e8e8e8; text-indent: 2em; margin-bottom: 20px; }
-        
-        #choices-container {
-            max-width: 800px;
-            margin: 20px auto;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-        
-        .choice-btn {
-            padding: 15px 25px;
-            background: linear-gradient(135deg, #2d2d44 0%, #1a1a2e 100%);
-            border: 1px solid rgba(196, 30, 58, 0.6);
-            border-radius: 6px;
-            color: #e8e8e8;
-            font-size: 1em;
-            text-align: left;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        
-        .choice-btn:hover {
-            background: linear-gradient(135deg, #c41e3a 0%, #8b0000 100%);
-            border-color: #c41e3a;
-            transform: translateX(10px);
-        }
-        
-        #status-bar {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: rgba(0,0,0,0.7);
-            padding: 15px 20px;
-            border-radius: 8px;
-            border: 1px solid rgba(196, 30, 58, 0.3);
-            font-size: 0.9em;
-        }
-        
-        #status-bar div { margin: 5px 0; color: #e8e8e8; }
-        #status-bar .label { color: #c41e3a; font-weight: bold; }
-        
-        #progress-bar { width: 100%; height: 3px; background: #2d2d44; border-radius: 2px; margin-top: 10px; overflow: hidden; }
-        #progress-fill { height: 100%; background: linear-gradient(90deg, #c41e3a, #ffd700); transition: width 0.5s ease; }
         
         #start-screen {
-            position: absolute;
+            position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%);
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            z-index: 100;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 200;
         }
         
-        #start-title { font-size: 3.5em; color: #c41e3a; text-shadow: 0 0 30px rgba(196, 30, 58, 0.5); margin-bottom: 20px; letter-spacing: 10px; }
-        #start-subtitle { font-size: 1.2em; color: #e8e8e8; margin-bottom: 50px; letter-spacing: 5px; }
+        #start-screen h1 {
+            color: #c41e3a;
+            font-size: 3em;
+            margin-bottom: 20px;
+            text-shadow: 0 0 20px rgba(196, 30, 58, 0.5);
+        }
+        
+        #start-screen p {
+            color: #e8e8e8;
+            font-size: 1.2em;
+            margin-bottom: 30px;
+        }
         
         #start-btn {
             padding: 15px 50px;
             font-size: 1.2em;
-            background: linear-gradient(135deg, #c41e3a 0%, #8b0000 100%);
+            background: linear-gradient(135deg, #c41e3a, #8b0000);
             border: none;
-            border-radius: 6px;
-            color: #fff;
+            border-radius: 5px;
+            color: white;
             cursor: pointer;
             transition: all 0.3s ease;
-            letter-spacing: 3px;
         }
         
-        #start-btn:hover { transform: scale(1.05); box-shadow: 0 0 30px rgba(196, 30, 58, 0.6); }
+        #start-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(196, 30, 58, 0.8);
+        }
+        
+        #game-container {
+            position: relative;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        #status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .status-item {
+            color: #e8e8e8;
+            font-size: 14px;
+        }
+        
+        .status-item span {
+            color: #ffd700;
+            font-weight: bold;
+        }
+        
+        #progress-bar {
+            flex: 1;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            margin: 0 20px;
+            overflow: hidden;
+        }
+        
+        #progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #c41e3a, #ffd700);
+            transition: width 0.5s ease;
+        }
+        
+        #chapter-title {
+            text-align: center;
+            color: #c41e3a;
+            font-size: 1.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+        }
+        
+        #dialogue-box {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.75);
+            border-radius: 15px;
+            padding: 30px;
+            color: #e8e8e8;
+            font-size: 1.1em;
+            line-height: 1.8;
+            overflow: hidden;
+            position: relative;
+            border: 1px solid rgba(196, 30, 58, 0.3);
+        }
+        
+        #narrator {
+            color: #ffd700;
+            font-style: italic;
+            margin-bottom: 15px;
+            font-size: 0.9em;
+        }
+        
+        #dialogue {
+            min-height: 100px;
+        }
+        
+        .character-name {
+            color: #4CAF50;
+            font-weight: bold;
+        }
+        
+        #choices-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        .choice-btn {
+            padding: 15px 30px;
+            background: rgba(45, 45, 68, 0.8);
+            border: 1px solid rgba(196, 30, 58, 0.5);
+            border-radius: 8px;
+            color: #e8e8e8;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+        }
+        
+        .choice-btn:hover {
+            background: rgba(196, 30, 58, 0.8);
+            border-color: #c41e3a;
+            transform: translateX(10px);
+        }
         
         #end-screen {
-            position: absolute;
+            position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.95);
-            display: flex;
+            display: none;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            z-index: 100;
-            padding: 30px;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 200;
         }
         
-        #end-title { font-size: 2.5em; color: #c41e3a; margin-bottom: 30px; text-align: center; }
-        #end-content { max-width: 800px; font-size: 1.1em; line-height: 2; color: #e8e8e8; text-align: center; margin-bottom: 40px; }
+        #end-screen h2 {
+            color: #c41e3a;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+        
+        #end-screen p {
+            color: #e8e8e8;
+            font-size: 1.2em;
+            text-align: center;
+            max-width: 600px;
+            margin-bottom: 30px;
+        }
         
         #restart-btn {
             padding: 15px 50px;
-            font-size: 1.1em;
-            background: linear-gradient(135deg, #2d2d44 0%, #1a1a2e 100%);
-            border: 1px solid rgba(196, 30, 58, 0.6);
-            border-radius: 6px;
-            color: #e8e8e8;
+            font-size: 1.2em;
+            background: linear-gradient(135deg, #c41e3a, #8b0000);
+            border: none;
+            border-radius: 5px;
+            color: white;
             cursor: pointer;
             transition: all 0.3s ease;
         }
         
-        #restart-btn:hover { background: linear-gradient(135deg, #c41e3a 0%, #8b0000 100%); border-color: #c41e3a; }
-        
-        #bg-error {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            background: rgba(196, 30, 58, 0.9);
-            padding: 10px 20px;
-            border-radius: 4px;
-            color: #fff;
-            font-size: 0.9em;
-            z-index: 100;
-            display: none;
+        #restart-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(196, 30, 58, 0.8);
         }
         
-        .center-text { text-align: center; text-indent: 0 !important; }
-        .highlight { color: #ffd700; font-weight: bold; }
-        .character-name { color: #c41e3a; font-weight: bold; }
+        #footer {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.8em;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
-    <div id="game-container">
-        <div id="background"></div>
-        <div id="fade-overlay"></div>
-        <div id="bg-error"></div>
-        
-        <div id="start-screen">
-            <h1 id="start-title">太行残雪</h1>
-            <p id="start-subtitle">—— 1942年十字岭反扫荡纪实</p>
-            <button id="start-btn" onclick="startGame()">开始游戏</button>
-        </div>
-
+    <div id="background"></div>
+    <div id="fade-overlay"></div>
+    <div id="bg-error"></div>
+    
+    <div id="start-screen">
+        <h1>血色征程</h1>
+        <p>—— 太行突围</p>
+        <button id="start-btn" onclick="startGame()">开始游戏</button>
+    </div>
+    
+    <div id="game-container" style="display: none;">
         <div id="status-bar">
-            <div><span class="label">节点:</span> <span id="node-count">0/10</span></div>
-            <div><span class="label">好感:</span> <span id="affection">中立</span></div>
-            <div><span class="label">结局:</span> <span id="ending-type">未定</span></div>
-            <div id="progress-bar"><div id="progress-fill"></div></div>
-        </div>
-
-        <div id="content-area">
-            <div id="text-box">
-                <div id="chapter-title"></div>
-                <div id="narrator"></div>
-                <div id="dialogue"></div>
+            <div class="status-item">抉择: <span id="node-count">0/10</span></div>
+            <div id="progress-bar">
+                <div id="progress-fill"></div>
             </div>
+            <div class="status-item">好感: <span id="affection">善良</span></div>
+            <div class="status-item">结局: <span id="ending-type">山河怅惘</span></div>
+        </div>
+        
+        <div id="chapter-title"></div>
+        
+        <div id="dialogue-box" onclick="skipTyping()">
+            <div id="narrator"></div>
+            <div id="dialogue"></div>
             <div id="choices-container"></div>
         </div>
-
-        <div id="end-screen" style="display: none;">
-            <h1 id="end-title"></h1>
-            <div id="end-content"></div>
-            <button id="restart-btn" onclick="restartGame()">重新开始</button>
-        </div>
+        
+        <div id="footer">血色征程 · 太行突围</div>
     </div>
-
+    
+    <div id="end-screen">
+        <h2 id="ending-title"></h2>
+        <p id="ending-text"></p>
+        <button id="restart-btn" onclick="restartGame()">重新开始</button>
+    </div>
+    
     <script>
-        // 使用相对路径访问本地图片
         const backgrounds = [
             '/static/image/1.jpg',
             '/static/image/2.jpg',
@@ -241,9 +305,10 @@
             '/static/image/13.jpg',
             '/static/image/14.jpg',
             '/static/image/15.jpg',
-            '/static/image/16.jpg'
+            '/static/image/16.jpg',
+            '/static/image/17.jpg'
         ];
-
+        
         const sceneBackgroundMap = {
             'start': 0, 'chapter1_1': 0, 'chapter1_2': 0, 'chapter1_3': 0,
             'chapter1_4': 1, 'node1_1': 1, 'node1_2': 1, 'node1_3': 1,
@@ -260,9 +325,9 @@
             'chapter5_1': 12, 'chapter5_2': 12, 'node8_1': 13, 'node8_2': 13,
             'node8_3': 13, 'transition8_1': 13, 'chapter5_3': 14, 'node9_1': 14,
             'node9_2': 14, 'node9_3': 14, 'transition9_1': 15, 'chapter_end': 15,
-            'node10_1': 15, 'node10_2': 15, 'node10_3': 15
+            'node10_1': 16, 'node10_2': 16, 'node10_3': 16
         };
-
+        
         const storyData = {
             start: { chapter: '', narrator: '', dialogue: '1942年5月，华北日军集结数万兵力，对太行抗日根据地发动疯狂大"扫荡"。铁蹄踏遍山野，炮火撕裂晴空，根据地军民陷入空前险境。八路军总部机关被迫连夜转移，向着山势险峻、易守难攻的十字岭深山突围。', next: 'chapter1_1' },
             chapter1_1: { chapter: '第一章：雨夜急撤', narrator: '[雨夜山林]', dialogue: '冷雨斜斜地打在枝叶上，汇成水流顺着帽檐往下淌。脚下的黄泥路被雨水泡得软烂，踩上去噗嗤作响。', next: 'chapter1_2' },
@@ -368,7 +433,7 @@
             node10_2: { chapter: '', narrator: '[结局]', dialogue: '你肃穆低头送别将军，泪水无声滑落，心中满是敬意。', ending: 'neutral' },
             node10_3: { chapter: '', narrator: '[结局]', dialogue: '你沉默跟随队伍，没有呐喊，只有心底无尽的悲凉。', ending: 'bad' }
         };
-
+        
         let currentScene = 'start';
         let currentBackground = 0;
         let affection = 0;
@@ -376,9 +441,10 @@
         let isTyping = false;
         let typingIndex = 0;
         let currentDialogue = '';
-
+        
         function startGame() {
             document.getElementById('start-screen').style.display = 'none';
+            document.getElementById('game-container').style.display = 'flex';
             currentScene = 'start';
             affection = 0;
             visitedNodes = [];
@@ -386,12 +452,12 @@
             fadeToBackground(0);
             loadScene();
         }
-
+        
         function restartGame() {
             document.getElementById('end-screen').style.display = 'none';
             startGame();
         }
-
+        
         function loadScene() {
             const scene = storyData[currentScene];
             if (!scene) {
@@ -399,12 +465,12 @@
                 document.getElementById('dialogue').innerHTML = '<span style="color: red;">错误：场景加载失败</span>';
                 return;
             }
-
+            
             document.getElementById('choices-container').innerHTML = '';
-
+            
             document.getElementById('chapter-title').textContent = scene.chapter || '';
             document.getElementById('narrator').textContent = scene.narrator || '';
-
+            
             if (scene.choices) {
                 if (!visitedNodes.includes(scene.node)) {
                     visitedNodes.push(scene.node);
@@ -419,7 +485,7 @@
                 typeDialogue();
             }
         }
-
+        
         function typeDialogue() {
             if (isTyping) return;
             isTyping = true;
@@ -453,7 +519,7 @@
                 }
             }, 30);
         }
-
+        
         function skipTyping() {
             if (isTyping) {
                 document.getElementById('dialogue').innerHTML = currentDialogue;
@@ -468,7 +534,7 @@
                 }
             }
         }
-
+        
         function showChoices(choices) {
             const container = document.getElementById('choices-container');
             choices.forEach((choice, index) => {
@@ -479,7 +545,7 @@
                 container.appendChild(btn);
             });
         }
-
+        
         function makeChoice(choice) {
             affection += choice.affection;
             console.log('选择:', choice.text, '->', choice.next, '好感度:', affection);
@@ -488,19 +554,19 @@
             updateBackground();
             loadScene();
         }
-
+        
         function updateStatus() {
             document.getElementById('node-count').textContent = `${visitedNodes.length}/10`;
             
             let affectionText = affection >= 5 ? '高尚' : affection >= 3 ? '正直' : affection >= 1 ? '善良' : affection >= -1 ? '中立' : affection >= -3 ? '自私' : '冷漠';
             document.getElementById('affection').textContent = affectionText;
-
+            
             let endingType = affection >= 5 ? '青山永念' : affection >= 0 ? '山河怅惘' : '半生愧悔';
             document.getElementById('ending-type').textContent = endingType;
-
+            
             document.getElementById('progress-fill').style.width = `${(visitedNodes.length / 10) * 100}%`;
         }
-
+        
         function updateBackground() {
             const newBackgroundIndex = sceneBackgroundMap[currentScene] !== undefined ? sceneBackgroundMap[currentScene] : currentBackground;
             if (newBackgroundIndex !== currentBackground) {
@@ -508,7 +574,7 @@
                 fadeToBackground(currentBackground);
             }
         }
-
+        
         function fadeToBackground(index) {
             const overlay = document.getElementById('fade-overlay');
             const bgElement = document.getElementById('background');
@@ -524,36 +590,37 @@
                     overlay.classList.remove('fade-in');
                 };
                 img.onerror = function() {
-                    errorElement.textContent = `⚠️ 无法加载: ${backgrounds[index]}`;
+                    bgElement.style.backgroundImage = `linear-gradient(135deg, #1a1a2e, #16213e)`;
+                    errorElement.textContent = '警告：无法加载背景图 ' + backgrounds[index];
                     errorElement.style.display = 'block';
-                    bgElement.style.background = 'linear-gradient(135deg, #1a1a2e, #16213e)';
                     overlay.classList.remove('fade-in');
                 };
                 img.src = backgrounds[index];
             }, 400);
         }
-
+        
         function showEnding(type) {
             const endScreen = document.getElementById('end-screen');
-            let title = '', content = '';
-
-            if (type === 'good') {
-                title = '结局一：青山永念';
-                content = '<p>你带着满身伤痕站在山岭之上，送别了左权将军。回望突围之路，每一次善意与担当都让你收获了真挚情谊。将军的精神万古长青，这段烽火记忆成为你一生最珍贵的念想。</p>';
-            } else if (type === 'neutral') {
-                title = '结局二：山河怅惘';
-                content = '<p>你恪守本分，做好了警卫员的职责。经历了战火的残酷与将星陨落的悲壮，心中满是沉甸甸的惋惜与敬意。</p>';
-            } else {
-                title = '结局三：半生愧悔';
-                content = '<p>你侥幸存活，可一路走来的退缩与犹豫成了终生的枷锁。每到雨夜，太行山上的身影便会闯入梦境，这份遗憾如影随形。</p>';
+            const title = document.getElementById('ending-title');
+            const text = document.getElementById('ending-text');
+            
+            switch(type) {
+                case 'good':
+                    title.textContent = '青山永念';
+                    text.textContent = '你带着战友们冲出了重围，左权将军的精神永远激励着你。多年后，每当你想起那个血色黄昏，心中依然热血沸腾。太行山上的每一寸土地，都铭记着那段不屈的岁月。';
+                    break;
+                case 'neutral':
+                    title.textContent = '山河怅惘';
+                    text.textContent = '战争结束了，但那段记忆永远刻在你心中。你时常会想起那个雨夜的行军，想起牺牲的战友，想起将军最后的身影。和平来之不易，你会用余生守护这份安宁。';
+                    break;
+                case 'bad':
+                    title.textContent = '半生愧悔';
+                    text.textContent = '你活了下来，但内心的愧疚从未消散。战场上的选择时常在梦中重现，那些未能挽救的生命，成为你永远的遗憾。唯有继续前行，才能告慰英灵。';
+                    break;
             }
-
-            document.getElementById('end-title').textContent = title;
-            document.getElementById('end-content').innerHTML = content;
+            
             endScreen.style.display = 'flex';
         }
-
-        document.getElementById('text-box').addEventListener('click', skipTyping);
     </script>
 </body>
 </html>
