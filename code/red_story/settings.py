@@ -4,7 +4,7 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-DEBUG = os.environ.get('DEBUG_MODE', 'True').lower() == 'true'
+DEBUG = True
 
 def _get_secret_key():
     secret_key = os.environ.get('DJANGO_SECRET_KEY')

@@ -394,7 +394,11 @@
 
         function loadScene() {
             const scene = storyData[currentScene];
-            if (!scene) return;
+            if (!scene) {
+                console.error('场景不存在:', currentScene);
+                document.getElementById('dialogue').innerHTML = '<span style="color: red;">错误：场景加载失败</span>';
+                return;
+            }
 
             document.getElementById('choices-container').innerHTML = '';
 
@@ -402,7 +406,9 @@
             document.getElementById('narrator').textContent = scene.narrator || '';
 
             if (scene.choices) {
-                visitedNodes.push(scene.node);
+                if (!visitedNodes.includes(scene.node)) {
+                    visitedNodes.push(scene.node);
+                }
                 document.getElementById('dialogue').innerHTML = scene.dialogue;
                 showChoices(scene.choices);
             } else if (scene.ending) {
@@ -437,6 +443,7 @@
                     clearInterval(typeInterval);
                     isTyping = false;
                     if (storyData[currentScene].next) {
+                        console.log('场景切换:', currentScene, '->', storyData[currentScene].next);
                         setTimeout(() => {
                             currentScene = storyData[currentScene].next;
                             updateBackground();
@@ -475,6 +482,7 @@
 
         function makeChoice(choice) {
             affection += choice.affection;
+            console.log('选择:', choice.text, '->', choice.next, '好感度:', affection);
             currentScene = choice.next;
             updateStatus();
             updateBackground();
