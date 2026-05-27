@@ -1,459 +1,362 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>血色太行 - 左权将军</title>
+    <title>太行残雪 - 视觉小说</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'SimHei', 'Microsoft YaHei', sans-serif; overflow: hidden; }
-        
-        #background {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background-size: cover;
-            background-position: center;
-            z-index: -1;
-            transition: opacity 0.5s ease;
-        }
-        
-        #fade-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: black;
-            z-index: 100;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.4s ease;
-        }
-        
-        #fade-overlay.fade-in {
-            opacity: 1;
-        }
-        
-        #start-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: rgba(0, 0, 0, 0.7);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 50;
-        }
-        
-        #start-screen h1 {
-            font-size: 3rem;
-            color: #c41e3a;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-            margin-bottom: 20px;
-        }
-        
-        #start-screen p {
-            color: white;
-            font-size: 1.2rem;
-            margin-bottom: 30px;
-        }
-        
-        #start-btn {
-            padding: 15px 50px;
-            font-size: 1.2rem;
-            background: #c41e3a;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        
-        #start-btn:hover {
-            background: #8b0000;
-            transform: scale(1.05);
-        }
+        body { font-family: 'SimSun', 'STSong', serif; background: #1a1a2e; color: #e8e8e8; overflow: hidden; }
         
         #game-container {
-            position: fixed;
-            bottom: 0;
-            left: 0;
             width: 100vw;
-            padding: 30px;
-            background: linear-gradient(transparent, rgba(0,0,0,0.8));
-            display: none;
-            flex-direction: column;
-            z-index: 10;
+            height: 100vh;
+            position: relative;
         }
         
-        #chapter-title {
-            font-size: 1.5rem;
-            color: #c41e3a;
-            margin-bottom: 10px;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
-        }
-        
-        #narrator {
-            font-size: 1.1rem;
-            color: #ffd700;
-            margin-bottom: 10px;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
-        }
-        
-        #dialogue-box {
-            background: rgba(0, 0, 0, 0.7);
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 20px;
-            min-height: 100px;
-        }
-        
-        #dialogue {
-            font-size: 1.2rem;
-            color: white;
-            line-height: 1.8;
-        }
-        
-        #choices-container {
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
-        
-        .choice-btn {
-            padding: 12px 30px;
-            font-size: 1rem;
-            background: rgba(196, 30, 58, 0.8);
-            color: white;
-            border: 2px solid #c41e3a;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            max-width: 45%;
-        }
-        
-        .choice-btn:hover {
-            background: #c41e3a;
-            transform: translateY(-3px);
-        }
-        
-        #status-bar {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            display: flex;
-            gap: 30px;
-            z-index: 20;
-        }
-        
-        .status-item {
-            background: rgba(0,0,0,0.6);
-            padding: 10px 15px;
-            border-radius: 5px;
-            color: white;
-        }
-        
-        .status-label {
-            font-size: 0.8rem;
-            color: #aaa;
-        }
-        
-        .status-value {
-            font-size: 1.1rem;
-            font-weight: bold;
-        }
-        
-        #progress-bar {
-            position: fixed;
+        #background {
+            position: absolute;
             top: 0;
             left: 0;
             width: 100%;
-            height: 5px;
-            background: #333;
-            z-index: 30;
-        }
-        
-        #progress-fill {
             height: 100%;
-            background: linear-gradient(90deg, #c41e3a, #ffd700);
-            transition: width 0.5s ease;
+            background-size: cover;
+            background-position: center;
+            opacity: 0.9;
+            transition: opacity 1s ease;
         }
         
-        #end-screen {
-            position: fixed;
+        #fade-overlay {
+            position: absolute;
             top: 0;
             left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: rgba(0, 0, 0, 0.9);
-            display: none;
+            width: 100%;
+            height: 100%;
+            background: black;
+            opacity: 0;
+            z-index: 50;
+            pointer-events: none;
+            transition: opacity 0.8s ease;
+        }
+        
+        .fade-in { opacity: 1 !important; }
+        
+        #content-area {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 60%;
+            background: linear-gradient(to top, rgba(0,0,0,0.95), rgba(0,0,0,0.8), rgba(0,0,0,0));
+            padding: 30px;
+            overflow-y: auto;
+        }
+        
+        #text-box {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px 30px;
+            background: rgba(26, 26, 46, 0.9);
+            border: 1px solid rgba(196, 30, 58, 0.5);
+            border-radius: 8px;
+        }
+        
+        #chapter-title { color: #c41e3a; font-size: 1.2em; font-weight: bold; margin-bottom: 15px; text-align: center; letter-spacing: 4px; }
+        #narrator { color: #ffd700; font-size: 0.9em; margin-bottom: 10px; font-style: italic; }
+        #dialogue { font-size: 1.1em; line-height: 1.8; color: #e8e8e8; text-indent: 2em; margin-bottom: 20px; }
+        
+        #choices-container {
+            max-width: 800px;
+            margin: 20px auto;
+            display: flex;
             flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 60;
+            gap: 12px;
         }
         
-        #ending-title {
-            font-size: 2.5rem;
-            color: #c41e3a;
-            margin-bottom: 20px;
-        }
-        
-        #ending-text {
-            font-size: 1.2rem;
-            color: white;
-            max-width: 600px;
-            text-align: center;
-            line-height: 1.8;
-            margin-bottom: 30px;
-        }
-        
-        #restart-btn {
-            padding: 15px 50px;
-            font-size: 1.2rem;
-            background: #c41e3a;
-            color: white;
-            border: none;
-            border-radius: 5px;
+        .choice-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, #2d2d44 0%, #1a1a2e 100%);
+            border: 1px solid rgba(196, 30, 58, 0.6);
+            border-radius: 6px;
+            color: #e8e8e8;
+            font-size: 1em;
+            text-align: left;
             cursor: pointer;
             transition: all 0.3s ease;
         }
         
-        #restart-btn:hover {
-            background: #8b0000;
-            transform: scale(1.05);
+        .choice-btn:hover {
+            background: linear-gradient(135deg, #c41e3a 0%, #8b0000 100%);
+            border-color: #c41e3a;
+            transform: translateX(10px);
         }
         
-        #bg-error {
-            position: fixed;
-            bottom: 10px;
-            right: 10px;
-            background: rgba(255,0,0,0.8);
-            color: white;
-            padding: 10px;
-            border-radius: 5px;
-            font-size: 0.8rem;
-            display: none;
-            z-index: 40;
+        #status-bar {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.7);
+            padding: 15px 20px;
+            border-radius: 8px;
+            border: 1px solid rgba(196, 30, 58, 0.3);
+            font-size: 0.9em;
         }
+        
+        #status-bar div { margin: 5px 0; color: #e8e8e8; }
+        #status-bar .label { color: #c41e3a; font-weight: bold; }
+        
+        #progress-bar { width: 100%; height: 3px; background: #2d2d44; border-radius: 2px; margin-top: 10px; overflow: hidden; }
+        #progress-fill { height: 100%; background: linear-gradient(90deg, #c41e3a, #ffd700); transition: width 0.5s ease; }
+        
+        #start-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+        
+        #start-title { font-size: 3.5em; color: #c41e3a; text-shadow: 0 0 30px rgba(196, 30, 58, 0.5); margin-bottom: 20px; letter-spacing: 10px; }
+        #start-subtitle { font-size: 1.2em; color: #e8e8e8; margin-bottom: 50px; letter-spacing: 5px; }
+        
+        #start-btn {
+            padding: 15px 50px;
+            font-size: 1.2em;
+            background: linear-gradient(135deg, #c41e3a 0%, #8b0000 100%);
+            border: none;
+            border-radius: 6px;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            letter-spacing: 3px;
+        }
+        
+        #start-btn:hover { transform: scale(1.05); box-shadow: 0 0 30px rgba(196, 30, 58, 0.6); }
+        
+        #end-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            padding: 30px;
+        }
+        
+        #end-title { font-size: 2.5em; color: #c41e3a; margin-bottom: 30px; text-align: center; }
+        #end-content { max-width: 800px; font-size: 1.1em; line-height: 2; color: #e8e8e8; text-align: center; margin-bottom: 40px; }
+        
+        #restart-btn {
+            padding: 15px 50px;
+            font-size: 1.1em;
+            background: linear-gradient(135deg, #2d2d44 0%, #1a1a2e 100%);
+            border: 1px solid rgba(196, 30, 58, 0.6);
+            border-radius: 6px;
+            color: #e8e8e8;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        #restart-btn:hover { background: linear-gradient(135deg, #c41e3a 0%, #8b0000 100%); border-color: #c41e3a; }
+        
+        #bg-error {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(196, 30, 58, 0.9);
+            padding: 10px 20px;
+            border-radius: 4px;
+            color: #fff;
+            font-size: 0.9em;
+            z-index: 100;
+            display: none;
+        }
+        
+        .center-text { text-align: center; text-indent: 0 !important; }
+        .highlight { color: #ffd700; font-weight: bold; }
+        .character-name { color: #c41e3a; font-weight: bold; }
     </style>
 </head>
 <body>
-    <div id="background"></div>
-    <div id="fade-overlay"></div>
-    
-    <div id="progress-bar">
-        <div id="progress-fill"></div>
-    </div>
-    
-    <div id="status-bar">
-        <div class="status-item">
-            <div class="status-label">抉择节点</div>
-            <div class="status-value" id="node-count">0/10</div>
-        </div>
-        <div class="status-item">
-            <div class="status-label">信念倾向</div>
-            <div class="status-value" id="affection">中立</div>
-        </div>
-        <div class="status-item">
-            <div class="status-label">预计结局</div>
-            <div class="status-value" id="ending-type">山河怅惘</div>
-        </div>
-    </div>
-    
-    <div id="start-screen">
-        <h1>血色太行</h1>
-        <p>——纪念左权将军</p>
-        <button id="start-btn" onclick="startGame()">开始游戏</button>
-    </div>
-    
     <div id="game-container">
-        <div id="chapter-title"></div>
-        <div id="narrator"></div>
-        <div id="dialogue-box">
-            <div id="dialogue" onclick="skipTyping()"></div>
+        <div id="background"></div>
+        <div id="fade-overlay"></div>
+        <div id="bg-error"></div>
+        
+        <div id="start-screen">
+            <h1 id="start-title">太行残雪</h1>
+            <p id="start-subtitle">—— 1942年十字岭反扫荡纪实</p>
+            <button id="start-btn" onclick="startGame()">开始游戏</button>
         </div>
-        <div id="choices-container"></div>
+
+        <div id="status-bar">
+            <div><span class="label">节点:</span> <span id="node-count">0/10</span></div>
+            <div><span class="label">结局:</span> <span id="ending-type">未定</span></div>
+            <div id="progress-bar"><div id="progress-fill"></div></div>
+        </div>
+
+        <div id="content-area">
+            <div id="text-box">
+                <div id="chapter-title"></div>
+                <div id="narrator"></div>
+                <div id="dialogue"></div>
+            </div>
+            <div id="choices-container"></div>
+        </div>
+
+        <div id="end-screen" style="display: none;">
+            <h1 id="end-title"></h1>
+            <div id="end-content"></div>
+            <button id="restart-btn" onclick="restartGame()">重新开始</button>
+        </div>
     </div>
-    
-    <div id="end-screen">
-        <h2 id="ending-title"></h2>
-        <p id="ending-text"></p>
-        <button id="restart-btn" onclick="restartGame()">重新开始</button>
-    </div>
-    
-    <div id="bg-error"></div>
-    
+
     <script>
         const backgrounds = [
-            '/static/image/1.jpg',
-            '/static/image/2.jpg',
-            '/static/image/3.jpg',
-            '/static/image/4.jpg',
-            '/static/image/5.jpg',
-            '/static/image/6.jpg',
-            '/static/image/7.jpg',
-            '/static/image/8.jpg',
-            '/static/image/9.jpg',
-            '/static/image/10.jpg',
-            '/static/image/11.jpg',
-            '/static/image/12.jpg',
-            '/static/image/13.jpg',
-            '/static/image/14.jpg',
-            '/static/image/15.jpg',
-            '/static/image/16.jpg',
-            '/static/image/17.jpg'
+            '{% static "image/1.jpg" %}',
+            '{% static "image/2.jpg" %}',
+            '{% static "image/3.jpg" %}',
+            '{% static "image/4.jpg" %}',
+            '{% static "image/5.jpg" %}',
+            '{% static "image/6.jpg" %}',
+            '{% static "image/7.jpg" %}',
+            '{% static "image/8.jpg" %}',
+            '{% static "image/9.jpg" %}',
+            '{% static "image/10.jpg" %}',
+            '{% static "image/11.jpg" %}',
+            '{% static "image/12.jpg" %}',
+            '{% static "image/13.jpg" %}',
+            '{% static "image/14.jpg" %}',
+            '{% static "image/15.jpg" %}',
+            '{% static "image/16.jpg" %}',
+            '{% static "image/17.jpg" %}'
         ];
-        
+
         const sceneBackgroundMap = {
-            'start': 0,
-            'chapter1_1': 0,
-            'chapter1_2': 0,
-            'chapter1_3': 0,
-            'chapter1_4': 0,
-            'node1_1': 1,
-            'node1_2': 1,
-            'node1_3': 1,
-            'transition1_1': 2,
-            'chapter2_1': 2,
-            'chapter2_2': 2,
-            'chapter2_3': 2,
-            'chapter2_4': 3,
-            'node2_1': 3,
-            'node2_2': 3,
-            'node2_3': 3,
-            'chapter2_5': 4,
-            'chapter2_6': 4,
-            'node3_1': 4,
-            'node3_2': 4,
-            'node3_3': 4,
-            'transition3_1': 5,
-            'chapter3_1': 5,
-            'chapter3_2': 5,
-            'chapter3_3': 5,
-            'chapter3_4': 6,
-            'chapter3_5': 6,
-            'node5_1': 6,
-            'node5_2': 6,
-            'node5_3': 6,
-            'chapter4_1': 7,
-            'chapter4_2': 7,
-            'node6_1': 7,
-            'node6_2': 7,
-            'node6_3': 7,
-            'chapter4_3': 8,
-            'node7_1': 8,
-            'node7_2': 8,
-            'node7_3': 8,
-            'chapter5_1': 9,
-            'chapter5_2': 9,
-            'node8_1': 9,
-            'node8_2': 9,
-            'node8_3': 9,
-            'chapter5_3': 10,
-            'node9_1': 10,
-            'node9_2': 10,
-            'node9_3': 10,
-            'transition9_1': 11,
-            'chapter_end': 12,
-            'node10_1': 14,
-            'node10_2': 15,
-            'node10_3': 16
+            'start': 0, 'chapter1_1': 0, 'chapter1_2': 0, 'chapter1_3': 0,
+            'chapter1_4': 1, 'node1_1': 1, 'node1_2': 1, 'node1_3': 1,
+            'transition1_1': 1, 'transition1_2': 2, 'chapter2_1': 2, 'chapter2_2': 2,
+            'chapter2_3': 2, 'chapter2_4': 3, 'node2_1': 3, 'node2_2': 3,
+            'node2_3': 3, 'transition2_1': 3, 'chapter2_5': 4, 'chapter2_6': 4,
+            'node3_1': 4, 'node3_2': 4, 'node3_3': 4, 'transition3_1': 5,
+            'chapter3_1': 5, 'chapter3_2': 5, 'chapter3_3': 6, 'node4_1': 6,
+            'node4_2': 6, 'node4_3': 6, 'transition4_1': 7, 'chapter3_4': 7,
+            'chapter3_5': 7, 'node5_1': 8, 'node5_2': 8, 'node5_3': 8,
+            'transition5_1': 9, 'chapter4_1': 9, 'chapter4_2': 9, 'node6_1': 10,
+            'node6_2': 10, 'node6_3': 10, 'transition6_1': 11, 'chapter4_3': 11,
+            'node7_1': 11, 'node7_2': 11, 'node7_3': 11, 'transition7_1': 12,
+            'chapter5_1': 12, 'chapter5_2': 12, 'node8_1': 13, 'node8_2': 13,
+            'node8_3': 13, 'transition8_1': 13, 'chapter5_3': 14, 'node9_1': 14,
+            'node9_2': 14, 'node9_3': 14, 'transition9_1': 15, 'chapter_end': 15,
+            'node10_1': 16, 'node10_2': 16, 'node10_3': 16
         };
 
         const storyData = {
-            start: { chapter: '', narrator: '[序章]', dialogue: '1942年5月，日军集结重兵对太行抗日根据地发动大规模"扫荡"。你是八路军总部的一名年轻参谋，跟随左权副总参谋长一同转战。', next: 'chapter1_1' },
-            chapter1_1: { chapter: '第一章：雨夜急撤', narrator: '[紧急军情]', dialogue: '夜幕降临，暴雨倾盆。总部收到情报，日军主力正在向我军合围。', next: 'chapter1_2' },
-            chapter1_2: { chapter: '', narrator: '[命令传达]', dialogue: '左权将军沉着指挥："同志们，我们必须连夜转移！把机密文件整理好，轻装前进！"', next: 'chapter1_3' },
-            chapter1_3: { chapter: '', narrator: '[战前动员]', dialogue: '队伍即将出发，你看到一位年轻战士正在偷偷写信回家。', next: 'chapter1_4' },
-            chapter1_4: { chapter: '', narrator: '[第一个抉择]', dialogue: '你注意到他把写好的信塞进了背包，而部队即将急行军。', choices: [
-                { text: '[A] 提醒他信件可能暴露行踪', next: 'node1_1', affection: 1 },
-                { text: '[B] 帮他把信藏好', next: 'node1_2', affection: 0 },
-                { text: '[C] 当作没看见', next: 'node1_3', affection: -1 }
+            start: { chapter: '', narrator: '', dialogue: '1942年5月，华北日军集结数万兵力，对太行抗日根据地发动疯狂大"扫荡"。铁蹄踏遍山野，炮火撕裂晴空，根据地军民陷入空前险境。八路军总部机关被迫连夜转移，向着山势险峻、易守难攻的十字岭深山突围。', next: 'chapter1_1' },
+            chapter1_1: { chapter: '第一章：雨夜急撤', narrator: '[雨夜山林]', dialogue: '冷雨斜斜地打在枝叶上，汇成水流顺着帽檐往下淌。脚下的黄泥路被雨水泡得软烂，踩上去噗嗤作响。', next: 'chapter1_2' },
+            chapter1_2: { chapter: '', narrator: '[跟随首长]', dialogue: '<span class="character-name">左权</span>翻身下马，徒步走了一段路。山路狭窄湿滑，马匹行进艰难。', next: 'chapter1_3' },
+            chapter1_3: { chapter: '', narrator: '[发现异常]', dialogue: '我紧跟在他身后，只见队伍最后方的新兵牛娃正扶着树干，脚腕明显肿胀。', next: 'chapter1_4' },
+            chapter1_4: { chapter: '', narrator: '[抉择1]', dialogue: '牛娃拼尽全力想要跟上，可受伤的脚踝根本不听使唤。你决定：', choices: [
+                { text: '[A] 停下搀扶牛娃', next: 'node1_1', affection: 1 },
+                { text: '[B] 汇报首长请求派人接应', next: 'node1_2', affection: 0 },
+                { text: '[C] 催促跟上', next: 'node1_3', affection: -1 }
             ], node: 1 },
-            node1_1: { chapter: '', narrator: '[抉择结果]', dialogue: '你提醒了战士，他感激地把信撕毁。"谢谢你，我懂了。"', next: 'transition1_1' },
-            node1_2: { chapter: '', narrator: '[抉择结果]', dialogue: '你帮他把信藏在贴身口袋里，他眼中闪过一丝温暖。', next: 'transition1_1' },
-            node1_3: { chapter: '', narrator: '[抉择结果]', dialogue: '你装作没看见，但心里隐隐不安。', next: 'transition1_1' },
-            transition1_1: { chapter: '', narrator: '[雨夜行军]', dialogue: '部队在泥泞中艰难行进，雨水和汗水浸透了每个人的衣衫。', next: 'chapter2_1' },
-            chapter2_1: { chapter: '第二章：岩洞暂歇', narrator: '[临时休整]', dialogue: '部队在一处山洞暂避风雨。战士们疲惫地靠在岩壁上休息。', next: 'chapter2_2' },
-            chapter2_2: { chapter: '', narrator: '[将军关怀]', dialogue: '左权将军巡视着队伍，把自己的大衣披给了一个冻得发抖的小战士。', next: 'chapter2_3' },
-            chapter2_3: { chapter: '', narrator: '[物资清点]', dialogue: '军需官报告："粮食只够维持两天了，还有几位伤员需要照顾。"', next: 'chapter2_4' },
-            chapter2_4: { chapter: '', narrator: '[口粮抉择]', dialogue: '一位炊事员找到你，悄悄说："参谋同志，这里还有一点私藏的干粮..."', choices: [
-                { text: '[A] 交给伤员', next: 'node2_1', affection: 1 },
-                { text: '[B] 平均分给大家', next: 'node2_2', affection: 0 },
-                { text: '[C] 留给指挥官', next: 'node2_3', affection: -1 }
+            node1_1: { chapter: '', narrator: '[抉择结果]', dialogue: '你快步上前扶住牛娃，架着他的胳膊一步步前行。牛娃又惊又暖，反复道谢。', next: 'transition1_1' },
+            node1_2: { chapter: '', narrator: '[抉择结果]', dialogue: '你跑到左权身边说明情况，首长赞许你思虑周全。', next: 'transition1_1' },
+            node1_3: { chapter: '', narrator: '[抉择结果]', dialogue: '你催促牛娃："快点跟上！"他面露难堪，强忍着剧痛赶路。', next: 'transition1_1' },
+            transition1_1: { chapter: '', narrator: '[雨夜行军]', dialogue: '队伍继续穿行，左权时不时停下询问伤员状况，将干粮分给年轻战士。', next: 'transition1_2' },
+            transition1_2: { chapter: '', narrator: '[发现岩洞]', dialogue: '侦查兵传来消息：前方山腰有一处天然岩洞，可以临时休整。', next: 'chapter2_1' },
+            chapter2_1: { chapter: '第二章：岩洞暂歇', narrator: '[进入岩洞]', dialogue: '众人走进岩洞，总算能避开风雨。战士们纷纷坐下，揉着酸痛的腿脚。', next: 'chapter2_2' },
+            chapter2_2: { chapter: '', narrator: '[重伤排长]', dialogue: '岩洞角落，排长老周伤势最重，发着高烧，呼吸急促微弱。', next: 'chapter2_3' },
+            chapter2_3: { chapter: '', narrator: '[最后的口粮]', dialogue: '一路奔袭，干粮基本吃光。我怀里还藏着最后一块杂粮干粮。', next: 'chapter2_4' },
+            chapter2_4: { chapter: '', narrator: '[抉择2]', dialogue: '老周嘴唇干裂，呢喃着食物。卫生员无奈摇头。你决定：', choices: [
+                { text: '[A] 全部让出口粮', next: 'node2_1', affection: 1 },
+                { text: '[B] 分出一半', next: 'node2_2', affection: 0 },
+                { text: '[C] 自己保留', next: 'node2_3', affection: -1 }
             ], node: 2 },
-            node2_1: { chapter: '', narrator: '[抉择结果]', dialogue: '你把干粮分给了伤员，他们虚弱地向你道谢。', next: 'chapter2_5' },
-            node2_2: { chapter: '', narrator: '[抉择结果]', dialogue: '你让炊事员把干粮混进大锅，让每个人都能分到一点。', next: 'chapter2_5' },
-            node2_3: { chapter: '', narrator: '[抉择结果]', dialogue: '你把干粮交给了指挥部，将军却让把它分给了战士们。', next: 'chapter2_5' },
-            chapter2_5: { chapter: '', narrator: '[夜色深沉]', dialogue: '深夜，哨兵突然来报：发现日军巡逻队正在靠近洞口！', next: 'chapter2_6' },
-            chapter2_6: { chapter: '', narrator: '[百姓遇险]', dialogue: '与此同时，附近村庄传来枪声——日军正在搜查群众！', choices: [
-                { text: '[A] 组织小分队救援百姓', next: 'node3_1', affection: 1 },
-                { text: '[B] 按原计划转移，避免暴露', next: 'node3_2', affection: 0 },
-                { text: '[C] 派少量人掩护，大部队转移', next: 'node3_3', affection: 0 }
+            node2_1: { chapter: '', narrator: '[抉择结果]', dialogue: '你将干粮掰碎喂给老周，战士们投来敬佩的目光。左权对你大加肯定。', next: 'transition2_1' },
+            node2_2: { chapter: '', narrator: '[抉择结果]', dialogue: '你平分口粮，处事稳妥，没有额外好感也没有不满。', next: 'transition2_1' },
+            node2_3: { chapter: '', narrator: '[抉择结果]', dialogue: '你悄悄收好干粮，身旁战士看在眼里，神色冷淡。', next: 'transition2_1' },
+            transition2_1: { chapter: '', narrator: '[紧急情报]', dialogue: '侦查班长冲进来："山下村落被日军搜查，有百姓被困！"', next: 'chapter2_5' },
+            chapter2_5: { chapter: '第二章续：民心取舍', narrator: '[百姓遇险]', dialogue: '一边是被困百姓，一边是隐蔽休整的总部机关。贸然下山可能暴露位置。', next: 'chapter2_6' },
+            chapter2_6: { chapter: '', narrator: '[抉择3]', dialogue: '你决定：', choices: [
+                { text: '[A] 主动请命救人', next: 'node3_1', affection: 1 },
+                { text: '[B] 原地待命', next: 'node3_2', affection: 0 },
+                { text: '[C] 鸣枪引开日军', next: 'node3_3', affection: 0 }
             ], node: 3 },
-            node3_1: { chapter: '', narrator: '[抉择结果]', dialogue: '你带领战士们冲向村庄，成功掩护群众撤离，但也暴露了位置。', next: 'transition3_1' },
-            node3_2: { chapter: '', narrator: '[抉择结果]', dialogue: '部队悄悄转移，远处的枪声渐渐消失在夜色中。', next: 'transition3_1' },
-            node3_3: { chapter: '', narrator: '[抉择结果]', dialogue: '你留下一个班掩护群众，大部队安全转移。', next: 'transition3_1' },
-            transition3_1: { chapter: '', narrator: '[黎明将至]', dialogue: '天色渐亮，部队终于摆脱了追击，但新的考验即将来临。', next: 'chapter3_1' },
-            chapter3_1: { chapter: '第三章：情报危机', narrator: '[截获情报]', dialogue: '侦察员带回紧急情报：日军已经破译了我们的部分密码！', next: 'chapter3_2' },
-            chapter3_2: { chapter: '', narrator: '[紧急会议]', dialogue: '左权将军召开紧急会议："必须立即更换密码本！同时要查出泄密的可能。"', next: 'chapter3_3' },
-            chapter3_3: { chapter: '', narrator: '[内部排查]', dialogue: '排查中发现，一位通讯员的行为有些可疑...', choices: [
-                { text: '[A] 直接逮捕审问', next: 'node4_1', affection: -1 },
-                { text: '[B] 暗中观察，寻找证据', next: 'node4_2', affection: 0 },
-                { text: '[C] 相信战友，继续观察', next: 'node4_3', affection: 1 }
+            node3_1: { chapter: '', narrator: '[抉择结果]', dialogue: '你主动请命："让我带几个人下山！"成功转移村民，大娘握着你的手感激不已。', next: 'transition3_1' },
+            node3_2: { chapter: '', narrator: '[抉择结果]', dialogue: '你服从命令原地待命，村民自行躲避，心中留下遗憾。', next: 'transition3_1' },
+            node3_3: { chapter: '', narrator: '[抉择结果]', dialogue: '你的提议被采纳，战士们鸣枪引开日军，队伍安全避险。', next: 'transition3_1' },
+            transition3_1: { chapter: '', narrator: '[继续前行]', dialogue: '危机解除，队伍继续向十字岭深处行进，山间起了浓雾。', next: 'chapter3_1' },
+            chapter3_1: { chapter: '第三章：情报危机', narrator: '[遭遇陌生人]', dialogue: '浓雾中走来一个衣衫褴褛的陌生人，自称是逃难百姓。', next: 'chapter3_2' },
+            chapter3_2: { chapter: '', narrator: '[可疑之人]', dialogue: '此人言辞恳切，可眼下局势复杂，日军时常派探子伪装。', next: 'chapter3_3' },
+            chapter3_3: { chapter: '', narrator: '[抉择4]', dialogue: '你决定：', choices: [
+                { text: '[A] 严格盘问', next: 'node4_1', affection: 1 },
+                { text: '[B] 直接放行', next: 'node4_2', affection: -1 },
+                { text: '[C] 交给首长甄别', next: 'node4_3', affection: 0 }
             ], node: 4 },
-            node4_1: { chapter: '', narrator: '[抉择结果]', dialogue: '后来证明是误会，那位通讯员只是想家了。你向他道歉。', next: 'chapter3_4' },
-            node4_2: { chapter: '', narrator: '[抉择结果]', dialogue: '你暗中观察，最终确认是虚惊一场，避免了一场冤案。', next: 'chapter3_4' },
-            node4_3: { chapter: '', narrator: '[抉择结果]', dialogue: '你选择相信战友，后来的事实证明他是清白的。', next: 'chapter3_4' },
-            chapter3_4: { chapter: '', narrator: '[山路行军]', dialogue: '部队进入山区，道路越来越艰险。前方传来消息，必经之路被敌军封锁。', next: 'chapter3_5' },
-            chapter3_5: { chapter: '', narrator: '[险坡危索]', dialogue: '唯一的通路是一条悬崖上的绳索，年久失修，摇摇欲坠。', choices: [
-                { text: '[A] 亲自带头探路', next: 'node5_1', affection: 1 },
-                { text: '[B] 让年轻战士先过', next: 'node5_2', affection: 0 },
-                { text: '[C] 寻找其他路线', next: 'node5_3', affection: 0 }
+            node4_1: { chapter: '', narrator: '[抉择结果]', dialogue: '你盘问细节，对方破绽百出，被识破是日军探子。队伍及时改道避开伏击。', next: 'transition4_1' },
+            node4_2: { chapter: '', narrator: '[抉择结果]', dialogue: '你放行了陌生人，此人传递假情报，队伍误入伏击圈。', next: 'transition4_1' },
+            node4_3: { chapter: '', narrator: '[抉择结果]', dialogue: '你将人送至首长面前，左权精准甄别，排除隐患。', next: 'transition4_1' },
+            transition4_1: { chapter: '', narrator: '[险坡危索]', dialogue: '前方出现陡峭山壁，防护绳索多处松动，通行危险。', next: 'chapter3_4' },
+            chapter3_4: { chapter: '第三章续：险坡危索', narrator: '[绳索松动]', dialogue: '伤员根本无力应对突发危险，原地停留越久风险越高。', next: 'chapter3_5' },
+            chapter3_5: { chapter: '', narrator: '[抉择5]', dialogue: '你决定：', choices: [
+                { text: '[A] 加固绳索', next: 'node5_1', affection: 1 },
+                { text: '[B] 快速通过', next: 'node5_2', affection: 0 },
+                { text: '[C] 全面排查', next: 'node5_3', affection: 1 }
             ], node: 5 },
-            node5_1: { chapter: '', narrator: '[抉择结果]', dialogue: '你第一个踏上绳索，战士们紧随其后，安全通过。', next: 'chapter4_1' },
-            node5_2: { chapter: '', narrator: '[抉择结果]', dialogue: '年轻战士们顺利通过，为后续部队探明了道路。', next: 'chapter4_1' },
-            node5_3: { chapter: '', narrator: '[抉择结果]', dialogue: '你们找到了一条隐秘的小路，但耽误了不少时间。', next: 'chapter4_1' },
-            chapter4_1: { chapter: '第四章：炮火连天', narrator: '[遭遇伏击]', dialogue: '突然，前方传来猛烈的炮火！日军早已在此设伏！', next: 'chapter4_2' },
-            chapter4_2: { chapter: '', narrator: '[激烈战斗]', dialogue: '炮弹在身边爆炸，硝烟弥漫。你看到几位战友倒下了...', choices: [
-                { text: '[A] 组织反击，掩护撤退', next: 'node6_1', affection: 1 },
-                { text: '[B] 迅速撤离，保存实力', next: 'node6_2', affection: 0 },
-                { text: '[C] 抢救伤员再走', next: 'node6_3', affection: 1 }
+            node5_1: { chapter: '', narrator: '[抉择结果]', dialogue: '你带头加固绳索，经过努力路段稳固，伤员安全通过。', next: 'transition5_1' },
+            node5_2: { chapter: '', narrator: '[抉择结果]', dialogue: '队伍快速通行，最后一名战士打滑险些坠落，有惊无险。', next: 'transition5_1' },
+            node5_3: { chapter: '', narrator: '[抉择结果]', dialogue: '全员排查路况，清理碎石，彻底规避风险。', next: 'transition5_1' },
+            transition5_1: { chapter: '', narrator: '[炮火来袭]', dialogue: '抵达开阔区域，日军炮火开始轰击，大规模进攻打响。', next: 'chapter4_1' },
+            chapter4_1: { chapter: '第四章：炮火连天', narrator: '[伤员难题]', dialogue: '重伤员行动能力丧失，带着伤员突围速度会大幅减缓。', next: 'chapter4_2' },
+            chapter4_2: { chapter: '', narrator: '[抉择6]', dialogue: '你决定：', choices: [
+                { text: '[A] 留下掩护伤员', next: 'node6_1', affection: 0 },
+                { text: '[B] 全员一起突围', next: 'node6_2', affection: 1 },
+                { text: '[C] 托付给农户', next: 'node6_3', affection: 0 }
             ], node: 6 },
-            node6_1: { chapter: '', narrator: '[抉择结果]', dialogue: '你带领战士们顽强反击，成功掩护大部队撤离。', next: 'chapter4_3' },
-            node6_2: { chapter: '', narrator: '[抉择结果]', dialogue: '部队快速撤离，虽然损失较小，但留下了伤员。', next: 'chapter4_3' },
-            node6_3: { chapter: '', narrator: '[抉择结果]', dialogue: '你和战友们冒着炮火救出伤员，自己也负了轻伤。', next: 'chapter4_3' },
-            chapter4_3: { chapter: '', narrator: '[断后任务]', dialogue: '左权将军决定亲自率领少数人断后，让主力部队先行转移。', choices: [
-                { text: '[A] 请求留下一起断后', next: 'node7_1', affection: 1 },
-                { text: '[B] 服从命令，随主力转移', next: 'node7_2', affection: 0 },
-                { text: '[C] 坚持让将军先走', next: 'node7_3', affection: 1 }
+            node6_1: { chapter: '', narrator: '[抉择结果]', dialogue: '几名战士主动留下掩护，与主力队伍短暂失散。', next: 'transition6_1' },
+            node6_2: { chapter: '', narrator: '[抉择结果]', dialogue: '全员相互搀扶，队伍凝聚力达到顶峰，同心协力冲锋。', next: 'transition6_1' },
+            node6_3: { chapter: '', narrator: '[抉择结果]', dialogue: '伤员被农户妥善收留，队伍轻装前行，突围速度提升。', next: 'transition6_1' },
+            transition6_1: { chapter: '', narrator: '[断后任务]', dialogue: '包围圈收缩，左权组织精锐力量断后，掩护大部队突围。', next: 'chapter4_3' },
+            chapter4_3: { chapter: '第四章续：勇担断后', narrator: '[主动请战]', dialogue: '断后意味着直面敌军火力，是九死一生的任务。', choices: [
+                { text: '[A] 主动请缨断后', next: 'node7_1', affection: 1 },
+                { text: '[B] 居中护卫首长', next: 'node7_2', affection: 0 },
+                { text: '[C] 申请先行转移', next: 'node7_3', affection: -1 }
             ], node: 7 },
-            node7_1: { chapter: '', narrator: '[抉择结果]', dialogue: '将军批准了你的请求，你留下来与他并肩作战。', next: 'chapter5_1' },
-            node7_2: { chapter: '', narrator: '[抉择结果]', dialogue: '你随主力转移，但心中始终牵挂着断后的战友们。', next: 'chapter5_1' },
-            node7_3: { chapter: '', narrator: '[抉择结果]', dialogue: '将军拒绝了："我是指挥员，必须最后撤离！"', next: 'chapter5_1' },
-            chapter5_1: { chapter: '第五章：生死绝境', narrator: '[血色黄昏]', dialogue: '战斗进入白热化。日军的包围圈越来越小，形势万分危急。', next: 'chapter5_2' },
-            chapter5_2: { chapter: '', narrator: '[将军嘱托]', dialogue: '左权将军把重要文件交给你："一定要把这些带出去！我来掩护你！"', choices: [
-                { text: '[A] 坚决服从，突围送信', next: 'node8_1', affection: 0 },
-                { text: '[B] 拒绝，要求一起战斗', next: 'node8_2', affection: 1 },
-                { text: '[C] 建议将军一起突围', next: 'node8_3', affection: 1 }
+            node7_1: { chapter: '', narrator: '[抉择结果]', dialogue: '你挺身而出，多名战友配合留守，内心生出强烈使命感。', next: 'transition7_1' },
+            node7_2: { chapter: '', narrator: '[抉择结果]', dialogue: '你恪守本分，坚守护卫岗位，安稳完成本职工作。', next: 'transition7_1' },
+            node7_3: { chapter: '', narrator: '[抉择结果]', dialogue: '你选择先行撤离，离开时满心愧疚，面对首长局促不安。', next: 'transition7_1' },
+            transition7_1: { chapter: '', narrator: '[生死绝境]', dialogue: '日军发起总攻，包围圈合拢，突围通道被封锁。', next: 'chapter5_1' },
+            chapter5_1: { chapter: '第五章：生死绝境', narrator: '[最后的抉择]', dialogue: '左权拒绝先行突围，执意留在高地指挥，亲自断后。', next: 'chapter5_2' },
+            chapter5_2: { chapter: '', narrator: '[抉择8]', dialogue: '你决定：', choices: [
+                { text: '[A] 劝说首长撤离', next: 'node8_1', affection: 1 },
+                { text: '[B] 誓死陪伴左右', next: 'node8_2', affection: 1 },
+                { text: '[C] 护送他人先行', next: 'node8_3', affection: 0 }
             ], node: 8 },
-            node8_1: { chapter: '', narrator: '[抉择结果]', dialogue: '你含泪接过文件，在战友的掩护下冲出重围。', next: 'chapter5_3' },
-            node8_2: { chapter: '', narrator: '[抉择结果]', dialogue: '将军严厉命令："这是命令！快走！"你不得不服从。', next: 'chapter5_3' },
-            node8_3: { chapter: '', narrator: '[抉择结果]', dialogue: '将军摇头："我的职责在这里。你必须走！"', next: 'chapter5_3' },
-            chapter5_3: { chapter: '', narrator: '[最后时刻]', dialogue: '就在你即将冲出重围的瞬间，日军的炮弹袭来...', choices: [
-                { text: '[A] 冲向将军试图掩护', next: 'node9_1', affection: 1 },
-                { text: '[B] 继续突围完成任务', next: 'node9_2', affection: 0 },
+            node8_1: { chapter: '', narrator: '[抉择结果]', dialogue: '你含泪劝说，左权温柔婉拒："我是指挥官，不能走。"', next: 'transition8_1' },
+            node8_2: { chapter: '', narrator: '[抉择结果]', dialogue: '你默默持枪站立，陪首长走完最后一段路。', next: 'transition8_1' },
+            node8_3: { chapter: '', narrator: '[抉择结果]', dialogue: '你奉命先行，回望高地，内心焦急万分。', next: 'transition8_1' },
+            transition8_1: { chapter: '', narrator: '[炮弹袭来]', dialogue: '一枚炮弹向着指挥高地飞速袭来，生死只在一瞬间。', next: 'chapter5_3' },
+            chapter5_3: { chapter: '第五章续：刹那生死', narrator: '[抉择9]', dialogue: '你决定：', choices: [
+                { text: '[A] 扑上前掩护', next: 'node9_1', affection: 1 },
+                { text: '[B] 大声嘶吼警报', next: 'node9_2', affection: 0 },
                 { text: '[C] 本能躲避', next: 'node9_3', affection: -1 }
             ], node: 9 },
-            node9_1: { chapter: '', narrator: '[抉择结果]', dialogue: '你奋不顾身冲上去，但炮弹在身边爆炸，你倒在了血泊中。', next: 'transition9_1' },
-            node9_2: { chapter: '', narrator: '[抉择结果]', dialogue: '你强忍悲痛继续突围，完成了将军交给的任务。', next: 'transition9_1' },
+            node9_1: { chapter: '', narrator: '[抉择结果]', dialogue: '你扑上前试图掩护，冲击波将你震飞，目睹悲剧发生。', next: 'transition9_1' },
+            node9_2: { chapter: '', narrator: '[抉择结果]', dialogue: '你大声警报，周边战士及时避险，却无力挽回结局。', next: 'transition9_1' },
             node9_3: { chapter: '', narrator: '[抉择结果]', dialogue: '你本能躲避，眼睁睁看着惨剧发生，巨大遗憾填满心房。', next: 'transition9_1' },
             transition9_1: { chapter: '', narrator: '[将星陨落]', dialogue: '硝烟散去，左权副总参谋长壮烈牺牲，将生命留在太行。', next: 'chapter_end' },
             chapter_end: { chapter: '终章：残雪太行', narrator: '[最终抉择]', dialogue: '主力队伍突围成功，最后的机会就在眼前。', choices: [
@@ -476,7 +379,6 @@
 
         function startGame() {
             document.getElementById('start-screen').style.display = 'none';
-            document.getElementById('game-container').style.display = 'flex';
             currentScene = 'start';
             affection = 0;
             visitedNodes = [];
@@ -492,21 +394,14 @@
 
         function loadScene() {
             const scene = storyData[currentScene];
-            if (!scene) {
-                console.error('场景不存在:', currentScene);
-                document.getElementById('dialogue').innerHTML = '<span style="color: red;">错误：场景加载失败</span>';
-                return;
-            }
+            if (!scene) return;
 
             document.getElementById('choices-container').innerHTML = '';
-
             document.getElementById('chapter-title').textContent = scene.chapter || '';
             document.getElementById('narrator').textContent = scene.narrator || '';
 
             if (scene.choices) {
-                if (!visitedNodes.includes(scene.node)) {
-                    visitedNodes.push(scene.node);
-                }
+                visitedNodes.push(scene.node);
                 document.getElementById('dialogue').innerHTML = scene.dialogue;
                 showChoices(scene.choices);
             } else if (scene.ending) {
@@ -523,7 +418,7 @@
             isTyping = true;
             typingIndex = 0;
             document.getElementById('dialogue').innerHTML = '';
-
+            
             const typeInterval = setInterval(() => {
                 if (typingIndex < currentDialogue.length) {
                     let char = currentDialogue[typingIndex];
@@ -587,10 +482,7 @@
 
         function updateStatus() {
             document.getElementById('node-count').textContent = `${visitedNodes.length}/10`;
-
-            let affectionText = affection >= 5 ? '高尚' : affection >= 3 ? '正直' : affection >= 1 ? '善良' : affection >= -1 ? '中立' : affection >= -3 ? '自私' : '冷漠';
-            document.getElementById('affection').textContent = affectionText;
-
+            
             let endingType = affection >= 5 ? '青山永念' : affection >= 0 ? '山河怅惘' : '半生愧悔';
             document.getElementById('ending-type').textContent = endingType;
 
@@ -609,50 +501,51 @@
             const overlay = document.getElementById('fade-overlay');
             const bgElement = document.getElementById('background');
             const errorElement = document.getElementById('bg-error');
-
+            
             overlay.classList.add('fade-in');
-
+            
             setTimeout(() => {
                 const img = new Image();
-                const imageUrl = backgrounds[index];
-
                 img.onload = function() {
-                    bgElement.style.backgroundImage = `url(${imageUrl})`;
+                    bgElement.style.backgroundImage = `url(${backgrounds[index]})`;
                     errorElement.style.display = 'none';
                     overlay.classList.remove('fade-in');
                 };
                 img.onerror = function() {
-                    bgElement.style.backgroundImage = `linear-gradient(135deg, #1a1a2e, #16213e)`;
-                    errorElement.textContent = '警告：无法加载背景图 ' + backgrounds[index];
+                    errorElement.textContent = `⚠️ 无法加载: ${backgrounds[index]}`;
                     errorElement.style.display = 'block';
+                    bgElement.style.background = 'linear-gradient(135deg, #1a1a2e, #16213e)';
                     overlay.classList.remove('fade-in');
                 };
-                img.src = imageUrl;
+                img.src = backgrounds[index];
             }, 400);
         }
 
         function showEnding(type) {
             const endScreen = document.getElementById('end-screen');
-            const title = document.getElementById('ending-title');
-            const text = document.getElementById('ending-text');
+            const background = document.getElementById('background');
+            let title = '', content = '';
 
-            switch(type) {
-                case 'good':
-                    title.textContent = '青山永念';
-                    text.textContent = '你带着战友们冲出了重围，左权将军的精神永远激励着你。多年后，每当你想起那个血色黄昏，心中依然热血沸腾。太行山上的每一寸土地，都铭记着那段不屈的岁月。';
-                    break;
-                case 'neutral':
-                    title.textContent = '山河怅惘';
-                    text.textContent = '战争结束了，但那段记忆永远刻在你心中。你时常会想起那个雨夜的行军，想起牺牲的战友，想起将军最后的身影。和平来之不易，你会用余生守护这份安宁。';
-                    break;
-                case 'bad':
-                    title.textContent = '半生愧悔';
-                    text.textContent = '你活了下来，但内心的愧疚从未消散。战场上的选择时常在梦中重现，那些未能挽救的生命，成为你永远的遗憾。唯有继续前行，才能告慰英灵。';
-                    break;
+            if (type === 'good') {
+                title = '结局一：青山永念';
+                content = '<p>你带着满身伤痕站在山岭之上，送别了左权将军。回望突围之路，每一次善意与担当都让你收获了真挚情谊。将军的精神万古长青，这段烽火记忆成为你一生最珍贵的念想。</p>';
+                background.style.backgroundImage = `url('${backgrounds[14]}')`;
+            } else if (type === 'neutral') {
+                title = '结局二：山河怅惘';
+                content = '<p>你恪守本分，做好了警卫员的职责。经历了战火的残酷与将星陨落的悲壮，心中满是沉甸甸的惋惜与敬意。</p>';
+                background.style.backgroundImage = `url('${backgrounds[15]}')`;
+            } else {
+                title = '结局三：半生愧悔';
+                content = '<p>你侥幸存活，可一路走来的退缩与犹豫成了终生的枷锁。每到雨夜，太行山上的身影便会闯入梦境，这份遗憾如影随形。</p>';
+                background.style.backgroundImage = `url('${backgrounds[16]}')`;
             }
 
+            document.getElementById('end-title').textContent = title;
+            document.getElementById('end-content').innerHTML = content;
             endScreen.style.display = 'flex';
         }
+
+        document.getElementById('text-box').addEventListener('click', skipTyping);
     </script>
 </body>
 </html>
