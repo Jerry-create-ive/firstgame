@@ -24,6 +24,14 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
             # Remove /static/ prefix
             file_path = path[8:]
             full_path = os.path.join('main/static', file_path)
+            
+            # Print log for debugging
+            print(f"[REQUEST] {self.path} -> {full_path}")
+            print(f"[EXISTS] {os.path.exists(full_path)}")
+            if os.path.exists(full_path):
+                print(f"[SIZE] {os.path.getsize(full_path)} bytes")
+                print(f"[MODIFIED] {os.path.getmtime(full_path)}")
+            
             self.serve_static(full_path)
             return
             
@@ -68,10 +76,12 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(content)
         except FileNotFoundError:
+            print(f"[ERROR] File not found: {file_path}")
             self.send_error(404, f"File not found: {file_path}")
 
 if __name__ == "__main__":
     print(f"Starting simple HTTP server on port {PORT}...")
+    print(f"Static files directory: {os.path.abspath('main/static')}")
     print(f"Access game at: http://localhost:{PORT}/")
     
     with socketserver.TCPServer(("", PORT), MyHandler) as httpd:
