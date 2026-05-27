@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>背景切换测试 - 本地版</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'SimSun', serif; overflow: hidden; }
+        
+        #game-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+        
+        #background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            opacity: 0.9;
+            transition: opacity 1s ease;
+        }
+        
+        #fade-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: black;
+            opacity: 0;
+            z-index: 50;
+            pointer-events: none;
+            transition: opacity 0.8s ease;
+        }
+        
+        .fade-in { opacity: 1 !important; }
+        
+        #content-area {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 30px;
+            background: linear-gradient(to top, rgba(0,0,0,0.9), rgba(0,0,0,0));
+        }
+        
+        #text-box {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px 30px;
+            background: rgba(26, 26, 46, 0.9);
+            border: 1px solid rgba(196, 30, 58, 0.5);
+            border-radius: 8px;
+            color: #e8e8e8;
+            font-size: 1.1em;
+            line-height: 1.8;
+        }
+        
+        #status-bar {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.8);
+            padding: 15px 25px;
+            border-radius: 8px;
+            color: #e8e8e8;
+            font-size: 1.1em;
+        }
+        
+        #bg-indicator {
+            color: #ffd700;
+            font-weight: bold;
+            font-size: 1.3em;
+        }
+        
+        #next-btn {
+            display: block;
+            margin: 20px auto;
+            padding: 15px 40px;
+            font-size: 1.1em;
+            background: linear-gradient(135deg, #c41e3a 0%, #8b0000 100%);
+            border: none;
+            border-radius: 6px;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        #next-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(196, 30, 58, 0.5);
+        }
+        
+        .error-msg {
+            color: #ff4444;
+            text-align: center;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div id="background"></div>
+        <div id="fade-overlay"></div>
+        
+        <div id="status-bar">
+            当前背景图: <span id="bg-indicator">1/16</span>
+        </div>
+        
+        <div id="content-area">
+            <div id="text-box">
+                <div id="dialogue">点击下方按钮测试背景切换效果，背景图会按顺序从1切换到16。</div>
+                <div id="error-area" class="error-msg" style="display:none;"></div>
+            </div>
+            <button id="next-btn" onclick="nextScene()">下一个场景 →</button>
+        </div>
+    </div>
+
+    <script>
+        // 使用相对路径指向图片文件夹
+        const backgrounds = [
+            'main/static/image/1.jpg',
+            'main/static/image/2.jpg',
+            'main/static/image/3.jpg',
+            'main/static/image/4.jpg',
+            'main/static/image/5.jpg',
+            'main/static/image/6.jpg',
+            'main/static/image/7.jpg',
+            'main/static/image/8.jpg',
+            'main/static/image/9.jpg',
+            'main/static/image/10.jpg',
+            'main/static/image/11.jpg',
+            'main/static/image/12.jpg',
+            'main/static/image/13.jpg',
+            'main/static/image/14.jpg',
+            'main/static/image/15.jpg',
+            'main/static/image/16.jpg'
+        ];
+
+        const sceneBackgroundMap = {
+            'scene1': 0,  'scene2': 1,  'scene3': 2,  'scene4': 3,
+            'scene5': 4,  'scene6': 5,  'scene7': 6,  'scene8': 7,
+            'scene9': 8,  'scene10': 9, 'scene11': 10, 'scene12': 11,
+            'scene13': 12, 'scene14': 13, 'scene15': 14, 'scene16': 15
+        };
+
+        const sceneDialogues = [
+            '【场景1】雨夜山林 - 八路军总部机关连夜转移',
+            '【场景2】泥泞山路 - 冷雨浇透军装',
+            '【场景3】发现岩洞 - 寻找临时休整之所',
+            '【场景4】岩洞暂歇 - 清点物资处理伤员',
+            '【场景5】百姓遇险 - 山下村落被日军搜查',
+            '【场景6】浓雾弥漫 - 山间起雾视野遮挡',
+            '【场景7】遭遇奸细 - 可疑陌生人出现',
+            '【场景8】险坡危索 - 防护绳索松动',
+            '【场景9】炮火来袭 - 日军主力追踪至此',
+            '【场景10】伤员安置 - 商议安置方案',
+            '【场景11】断后任务 - 组织断后小队',
+            '【场景12】生死绝境 - 包围圈合拢',
+            '【场景13】将星陨落 - 左权将军坐镇指挥',
+            '【场景14】千钧一发 - 炮弹飞速袭来',
+            '【场景15】硝烟散尽 - 将军壮烈牺牲',
+            '【场景16】终章突围 - 带着遗志前行'
+        ];
+
+        let currentBackground = 0;
+        let currentSceneIndex = 1;
+
+        function nextScene() {
+            if (currentSceneIndex > 16) {
+                currentSceneIndex = 1;
+            }
+            
+            const sceneName = `scene${currentSceneIndex}`;
+            const newBackgroundIndex = sceneBackgroundMap[sceneName];
+            
+            updateBackground(newBackgroundIndex);
+            updateDialogue(currentSceneIndex - 1);
+            updateStatus(currentSceneIndex);
+            
+            currentSceneIndex++;
+        }
+
+        function updateBackground(index) {
+            if (index !== currentBackground) {
+                currentBackground = index;
+                fadeToBackground(index);
+            }
+        }
+
+        function fadeToBackground(index) {
+            const overlay = document.getElementById('fade-overlay');
+            const bgElement = document.getElementById('background');
+            const errorArea = document.getElementById('error-area');
+            
+            overlay.classList.add('fade-in');
+            
+            setTimeout(() => {
+                // 尝试加载图片
+                const img = new Image();
+                img.onload = function() {
+                    bgElement.style.backgroundImage = `url(${backgrounds[index]})`;
+                    errorArea.style.display = 'none';
+                };
+                img.onerror = function() {
+                    // 如果图片加载失败，显示错误信息并使用渐变背景
+                    errorArea.textContent = `⚠️ 图片加载失败: ${backgrounds[index]}`;
+                    errorArea.style.display = 'block';
+                    // 使用渐变色替代
+                    const gradients = [
+                        'linear-gradient(135deg, #1a1a2e, #16213e)',
+                        'linear-gradient(135deg, #2d1f3d, #1a1a2e)',
+                        'linear-gradient(135deg, #3d2914, #2a1f0f)',
+                        'linear-gradient(135deg, #1a3a2a, #0d2a1a)',
+                        'linear-gradient(135deg, #4a2c2c, #2a1818)',
+                        'linear-gradient(135deg, #2a2a4a, #1a1a3a)',
+                        'linear-gradient(135deg, #1a3a3a, #0d2a2a)',
+                        'linear-gradient(135deg, #3a2a1a, #2a1f0f)',
+                        'linear-gradient(135deg, #4a1a3a, #2a0f1f)',
+                        'linear-gradient(135deg, #1a2a4a, #0d1a3a)',
+                        'linear-gradient(135deg, #3a3a2a, #2a2a1a)',
+                        'linear-gradient(135deg, #4a3a1a, #2a1f0a)',
+                        'linear-gradient(135deg, #1a4a3a, #0d2a1f)',
+                        'linear-gradient(135deg, #2a1a4a, #1a0f2a)',
+                        'linear-gradient(135deg, #3a1a2a, #1f0f1a)',
+                        'linear-gradient(135deg, #1a1a1a, #000000)'
+                    ];
+                    bgElement.style.background = gradients[index % gradients.length];
+                };
+                img.src = backgrounds[index];
+                
+                overlay.classList.remove('fade-in');
+            }, 400);
+        }
+
+        function updateDialogue(index) {
+            document.getElementById('dialogue').textContent = sceneDialogues[index];
+        }
+
+        function updateStatus(sceneNum) {
+            document.getElementById('bg-indicator').textContent = `${sceneNum}/16`;
+        }
+
+        // 初始化第一个场景
+        window.onload = function() {
+            // 先尝试加载第一张图片
+            const img = new Image();
+            img.onload = function() {
+                document.getElementById('background').style.backgroundImage = `url(${backgrounds[0]})`;
+            };
+            img.onerror = function() {
+                // 如果加载失败，使用渐变背景
+                document.getElementById('background').style.background = 'linear-gradient(135deg, #1a1a2e, #16213e)';
+                document.getElementById('error-area').textContent = '⚠️ 图片加载失败，请检查图片路径是否正确';
+                document.getElementById('error-area').style.display = 'block';
+            };
+            img.src = backgrounds[0];
+            
+            updateDialogue(0);
+            updateStatus(1);
+        };
+    </script>
+</body>
+</html>
