@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>图片测试</title>
+    <style>
+        body { font-family: Arial; margin: 20px; background: #333; color: white; }
+        .image-container { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+        .image-item { border: 1px solid #555; padding: 10px; text-align: center; }
+        img { max-width: 100%; height: auto; border: 1px solid #444; }
+        .success { color: green; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>📷 图片加载测试</h1>
+    <p>测试所有17张背景图是否能正确加载</p>
+    
+    <div class="image-container" id="imageContainer"></div>
+    
+    <script>
+        const totalImages = 17;
+        const container = document.getElementById('imageContainer');
+        
+        for (let i = 1; i <= totalImages; i++) {
+            const version = 'v4';
+            const url = `/static/image/${i}.jpg?${version}`;
+            
+            const item = document.createElement('div');
+            item.className = 'image-item';
+            
+            const img = document.createElement('img');
+            img.src = url;
+            img.alt = `${i}.jpg`;
+            img.onload = function() {
+                item.innerHTML = `<p class="success">✅ ${i}.jpg</p>` + item.innerHTML;
+            };
+            img.onerror = function() {
+                item.innerHTML = `<p class="error">❌ ${i}.jpg - 加载失败</p>` + item.innerHTML;
+                img.style.display = 'none';
+            };
+            
+            item.appendChild(img);
+            container.appendChild(item);
+        }
+    </script>
+</body>
+</html>
