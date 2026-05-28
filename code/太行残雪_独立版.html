@@ -1,4 +1,3 @@
-{% load static %}
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -225,23 +224,23 @@
 
     <script>
         const backgrounds = [
-            '{% static "image/1.jpg" %}',
-            '{% static "image/2.jpg" %}',
-            '{% static "image/3.jpg" %}',
-            '{% static "image/4.jpg" %}',
-            '{% static "image/5.jpg" %}',
-            '{% static "image/6.jpg" %}',
-            '{% static "image/7.jpg" %}',
-            '{% static "image/8.jpg" %}',
-            '{% static "image/9.jpg" %}',
-            '{% static "image/10.jpg" %}',
-            '{% static "image/11.jpg" %}',
-            '{% static "image/12.jpg" %}',
-            '{% static "image/13.jpg" %}',
-            '{% static "image/14.jpg" %}',
-            '{% static "image/15.jpg" %}',
-            '{% static "image/16.jpg" %}',
-            '{% static "image/17.jpg" %}'
+            '../static/image/1.jpg',
+            '../static/image/2.jpg',
+            '../static/image/3.jpg',
+            '../static/image/4.jpg',
+            '../static/image/5.jpg',
+            '../static/image/6.jpg',
+            '../static/image/7.jpg',
+            '../static/image/8.jpg',
+            '../static/image/9.jpg',
+            '../static/image/10.jpg',
+            '../static/image/11.jpg',
+            '../static/image/12.jpg',
+            '../static/image/13.jpg',
+            '../static/image/14.jpg',
+            '../static/image/15.jpg',
+            '../static/image/16.jpg',
+            '../static/image/17.jpg'
         ];
 
         const sceneBackgroundMap = {
@@ -376,24 +375,13 @@
         let typingIndex = 0;
         let currentDialogue = '';
         
-        // 单维度核心倾向：担当与坚守
-        let spirit = 0;  // 精神值，正数为担当，负数为退缩
+        let spirit = 0;
         
-        // 节点权重配置（普通节点权重1，关键节点权重翻倍）
         const nodeWeights = {
-            1: 1,    // 雨夜急撤 - 普通
-            2: 1.5,  // 口粮分配 - 前期试探
-            3: 1.5,  // 救援村民 - 前期试探
-            4: 1,    // 盘问探子 - 普通
-            5: 1,    // 抢修道路 - 普通
-            6: 2,    // 炮火来临 - 关键节点
-            7: 2.5,  // 断后抉择 - 核心关键
-            8: 3,    // 劝说首长 - 核心关键
-            9: 3.5,  // 炮弹突袭 - 核心关键
-            10: 4    // 最终突围 - 终极关键
+            1: 1, 2: 1.5, 3: 1.5, 4: 1, 5: 1,
+            6: 2, 7: 2.5, 8: 3, 9: 3.5, 10: 4
         };
         
-        // 选择历史记录
         let choiceHistory = [];
 
         function startGame() {
@@ -496,19 +484,14 @@
             const currentNode = visitedNodes.length + 1;
             const weight = nodeWeights[currentNode] || 1;
             
-            // 获取选项的精神值影响（正向为担当，负向为退缩）
             const influence = choice.spirit || 0;
-            
-            // 应用节点权重计算实际变化
             const change = influence * weight;
             spirit += change;
             
-            // 关键节点额外加成（节点7-10挺身而出获得额外加分）
             if (currentNode >= 7 && influence > 0) {
-                spirit += 2; // 后期挺身而出额外加分，支持"心路转变"
+                spirit += 2;
             }
             
-            // 记录选择历史
             choiceHistory.push({
                 node: currentNode,
                 choice: choice.text,
@@ -527,7 +510,6 @@
         function updateStatus() {
             document.getElementById('node-count').textContent = `${visitedNodes.length}/10`;
             
-            // 直接基于精神值判定结局
             const endingType = determineEnding();
             document.getElementById('ending-type').textContent = endingType;
 
@@ -535,10 +517,6 @@
         }
         
         function determineEnding() {
-            // 链式选择结局判定：
-            // - 精神值 >= 15：青山永念（圆满结局）
-            // - -5 <= 精神值 < 15：山河怅惘（惋惜结局）
-            // - 精神值 < -5：半生愧悔（遗憾结局）
             if (spirit >= 15) {
                 return '青山永念';
             } else if (spirit >= -5) {
@@ -599,110 +577,9 @@
                 background.style.backgroundImage = `url('${backgrounds[16]}')`;
             }
 
-            const statsPanel = generateStatsPanel();
-
             document.getElementById('end-title').textContent = title;
-            document.getElementById('end-content').innerHTML = content + statsPanel;
+            document.getElementById('end-content').innerHTML = content;
             endScreen.style.display = 'flex';
-        }
-        
-        function generateStatsPanel() {
-            let positiveChoices = 0;
-            let negativeChoices = 0;
-            let neutralChoices = 0;
-            
-            choiceHistory.forEach(choice => {
-                if (choice.influence > 0) positiveChoices++;
-                else if (choice.influence < 0) negativeChoices++;
-                else neutralChoices++;
-            });
-            
-            const maxSpirit = 5 * 4 + 4 * 2;
-            const minSpirit = -4 * 3.5;
-            const normalizedSpirit = Math.min(100, Math.max(0, ((spirit - minSpirit) / (maxSpirit - minSpirit)) * 100));
-            
-            let panel = `
-            <div id="stats-panel" style="
-                background: rgba(26, 26, 46, 0.95);
-                border: 1px solid rgba(196, 30, 58, 0.5);
-                border-radius: 12px;
-                padding: 25px;
-                margin-top: 30px;
-                text-align: left;
-                max-height: 400px;
-                overflow-y: auto;
-            ">
-                <h3 style="color: #c41e3a; text-align: center; margin-bottom: 20px; letter-spacing: 2px;">征程统计</h3>
-                
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
-                    <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 8px;">
-                        <div style="color: #ffd700; font-size: 0.9em;">最终精神值</div>
-                        <div style="font-size: 1.8em; font-weight: bold; color: ${spirit >= 15 ? '#4ade80' : spirit >= -5 ? '#fbbf24' : '#f87171'};">${spirit}</div>
-                    </div>
-                    <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 8px;">
-                        <div style="color: #ffd700; font-size: 0.9em;">选择总数</div>
-                        <div style="font-size: 1.8em; font-weight: bold; color: #e8e8e8;">${choiceHistory.length}</div>
-                    </div>
-                </div>
-                
-                <div style="height: 20px; background: #2d2d44; border-radius: 10px; margin-bottom: 15px; overflow: hidden;">
-                    <div style="
-                        height: 100%;
-                        width: ${normalizedSpirit}%;
-                        background: linear-gradient(90deg, #c41e3a, #ffd700, #4ade80);
-                        border-radius: 10px;
-                        transition: width 1s ease;
-                    "></div>
-                </div>
-                
-                <div style="display: flex; justify-content: space-around; margin-bottom: 20px;">
-                    <div style="text-align: center;">
-                        <div style="color: #4ade80; font-size: 1.5em; font-weight: bold;">${positiveChoices}</div>
-                        <div style="color: #888; font-size: 0.8em;">担当选择</div>
-                    </div>
-                    <div style="text-align: center;">
-                        <div style="color: #fbbf24; font-size: 1.5em; font-weight: bold;">${neutralChoices}</div>
-                        <div style="color: #888; font-size: 0.8em;">中立选择</div>
-                    </div>
-                    <div style="text-align: center;">
-                        <div style="color: #f87171; font-size: 1.5em; font-weight: bold;">${negativeChoices}</div>
-                        <div style="color: #888; font-size: 0.8em;">退缩选择</div>
-                    </div>
-                </div>
-                
-                <div style="border-top: 1px solid rgba(196, 30, 58, 0.3); padding-top: 15px;">
-                    <div style="color: #ffd700; font-size: 0.9em; margin-bottom: 10px;">抉择历程</div>
-                    <div style="max-height: 150px; overflow-y: auto;">
-            `;
-            
-            choiceHistory.forEach((choice, index) => {
-                const isPositive = choice.influence > 0;
-                const isNegative = choice.influence < 0;
-                panel += `
-                    <div style="
-                        display: flex; 
-                        justify-content: space-between; 
-                        padding: 8px 12px; 
-                        background: rgba(0,0,0,0.2);
-                        margin-bottom: 5px;
-                        border-radius: 4px;
-                        border-left: 3px solid ${isPositive ? '#4ade80' : isNegative ? '#f87171' : '#fbbf24'};
-                    ">
-                        <span style="color: #e8e8e8; font-size: 0.9em;">节点${choice.node}</span>
-                        <span style="color: ${isPositive ? '#4ade80' : isNegative ? '#f87171' : '#fbbf24'}; font-size: 0.9em;">
-                            ${isPositive ? '+' : ''}${choice.change}
-                        </span>
-                    </div>
-                `;
-            });
-            
-            panel += `
-                    </div>
-                </div>
-            </div>
-            `;
-            
-            return panel;
         }
 
         document.getElementById('text-box').addEventListener('click', skipTyping);
