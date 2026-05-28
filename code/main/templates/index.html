@@ -383,19 +383,51 @@
             wisdom: 0,     // 智慧
             loyalty: 0     // 忠诚
         };
-        let lateGameBonus = 0; // 后期选择加成
+        
+        // 决策历史记录（用于关联分析）
+        let choiceHistory = [];      // 记录所有选择
+        let styleHistory = [];       // 记录决策风格序列
+        let moralAccumulator = 0;    // 道德积累值
+        let consistencyBonus = 0;    // 决策连贯性加成
+        
+        // 情境记忆（记录关键选择）
+        let situationMemory = {
+            savedVillagers: false,      // 是否救过村民
+            helpedWounded: false,       // 是否帮助过伤员
+            questionedSpy: false,       // 是否盘问过探子
+            repairedRoad: false,        // 是否抢修过道路
+            stayedWithLeader: false     // 是否陪伴首长
+        };
         
         // 节点权重（越往后的节点权重越高）
         const nodeWeights = {
             1: 1.0, 2: 1.0, 3: 1.2, 4: 1.2, 5: 1.4,
             6: 1.4, 7: 1.6, 8: 1.6, 9: 1.8, 10: 2.0
         };
+        
+        // 决策风格定义
+        const styleDefinitions = {
+            courage: ['勇敢', '牺牲', '冲锋', '掩护', '断后'],
+            kindness: ['救助', '搀扶', '护送', '安抚', '分享'],
+            wisdom: ['劝说', '计谋', '侦查', '汇报', '部署'],
+            loyalty: ['坚守', '护卫', '服从', '陪伴', '送别']
+        };
 
         function startGame() {
             document.getElementById('start-screen').style.display = 'none';
             currentScene = 'start';
             stats = { courage: 0, kindness: 0, wisdom: 0, loyalty: 0 };
-            lateGameBonus = 0;
+            choiceHistory = [];
+            styleHistory = [];
+            moralAccumulator = 0;
+            consistencyBonus = 0;
+            situationMemory = {
+                savedVillagers: false,
+                helpedWounded: false,
+                questionedSpy: false,
+                repairedRoad: false,
+                stayedWithLeader: false
+            };
             visitedNodes = [];
             updateStatus();
             fadeToBackground(0);
@@ -488,9 +520,24 @@
         }
 
         function makeChoice(choice) {
-            // 获取当前节点权重
             const currentNode = visitedNodes.length + 1;
             const weight = nodeWeights[currentNode] || 1.0;
+            
+            // 记录选择历史
+            choiceHistory.push({
+                node: currentNode,
+                choice: choice.text,
+                effects: {
+                    courage: choice.courage,
+                    kindness: choice.kindness,
+                    wisdom: choice.wisdom,
+                    loyalty: choice.loyalty
+                }
+            });
+            
+            // 识别决策风格
+            let dominantStyle = identifyStyle(choice);
+            styleHistory.push(dominantStyle);
             
             // 更新多维度属性（使用节点权重）
             if (choice.courage !== undefined) stats.courage += choice.courage * weight;
@@ -498,15 +545,132 @@
             if (choice.wisdom !== undefined) stats.wisdom += choice.wisdom * weight;
             if (choice.loyalty !== undefined) stats.loyalty += choice.loyalty * weight;
             
-            // 后期节点额外加成（节点7-10）
-            if (currentNode >= 7) {
-                lateGameBonus += choice.affection !== undefined ? choice.affection * 0.5 : 0;
-            }
+            // 更新情境记忆
+            updateSituationMemory(currentNode, choice);
+            
+            // 计算决策连贯性加成
+            consistencyBonus = calculateConsistencyBonus();
+            
+            // 计算道德积累（基于连续正向选择）
+            updateMoralAccumulator(choice);
+            
+            // 应用情境关联加成
+            applySituationBonuses(choice);
             
             currentScene = choice.next;
             updateStatus();
             updateBackground();
             loadScene();
+        }
+        
+        // 识别决策风格
+        function identifyStyle(choice) {
+            let maxEffect = 0;
+            let style = 'neutral';
+            
+            if (choice.courage > maxEffect) { maxEffect = choice.courage; style = 'courage'; }
+            if (choice.kindness > maxEffect) { maxEffect = choice.kindness; style = 'kindness'; }
+            if (choice.wisdom > maxEffect) { maxEffect = choice.wisdom; style = 'wisdom'; }
+            if (choice.loyalty > maxEffect) { maxEffect = choice.loyalty; style = 'loyalty'; }
+            
+            return style;
+        }
+        
+        // 更新情境记忆
+        function updateSituationMemory(node, choice) {
+            switch(node) {
+                case 3:
+                    if (choice.text.includes('村民') || choice.kindness > 0) {
+                        situationMemory.savedVillagers = true;
+                    }
+                    break;
+                case 2:
+                    if (choice.text.includes('伤员') || choice.kindness > 0) {
+                        situationMemory.helpedWounded = true;
+                    }
+                    break;
+                case 4:
+                    if (choice.text.includes('盘问') || choice.wisdom > 0) {
+                        situationMemory.questionedSpy = true;
+                    }
+                    break;
+                case 5:
+                    if (choice.text.includes('抢修') || choice.courage > 0) {
+                        situationMemory.repairedRoad = true;
+                    }
+                    break;
+                case 8:
+                    if (choice.text.includes('陪伴') || choice.loyalty > 0) {
+                        situationMemory.stayedWithLeader = true;
+                    }
+                    break;
+            }
+        }
+        
+        // 计算决策连贯性加成（连续做出相同风格决策）
+        function calculateConsistencyBonus() {
+            if (styleHistory.length < 3) return 0;
+            
+            let bonus = 0;
+            let consecutiveCount = 1;
+            
+            for (let i = styleHistory.length - 1; i > 0; i--) {
+                if (styleHistory[i] === styleHistory[i-1] && styleHistory[i] !== 'neutral') {
+                    consecutiveCount++;
+                } else {
+                    break;
+                }
+            }
+            
+            // 连续3次以上相同风格获得加成
+            if (consecutiveCount >= 3) {
+                bonus = (consecutiveCount - 2) * 0.5;
+            }
+            
+            return bonus;
+        }
+        
+        // 更新道德积累值
+        function updateMoralAccumulator(choice) {
+            const totalEffect = (choice.courage || 0) + (choice.kindness || 0) + 
+                              (choice.wisdom || 0) + (choice.loyalty || 0);
+            
+            if (totalEffect > 0) {
+                moralAccumulator += totalEffect;
+            } else {
+                moralAccumulator = Math.max(0, moralAccumulator - 1);
+            }
+        }
+        
+        // 应用情境关联加成（之前的选择影响当前选择的效果）
+        function applySituationBonuses(choice) {
+            // 如果之前救过村民，仁慈属性获得加成
+            if (situationMemory.savedVillagers && choice.kindness > 0) {
+                stats.kindness += 1;
+            }
+            
+            // 如果之前帮助过伤员，后续勇气选择获得加成
+            if (situationMemory.helpedWounded && choice.courage > 0) {
+                stats.courage += 1;
+            }
+            
+            // 如果之前盘问过探子，智慧选择获得加成
+            if (situationMemory.questionedSpy && choice.wisdom > 0) {
+                stats.wisdom += 1;
+            }
+            
+            // 如果之前抢修过道路，忠诚选择获得加成
+            if (situationMemory.repairedRoad && choice.loyalty > 0) {
+                stats.loyalty += 1;
+            }
+            
+            // 如果陪伴首长到最后，所有属性获得加成
+            if (situationMemory.stayedWithLeader) {
+                stats.courage += 0.5;
+                stats.kindness += 0.5;
+                stats.wisdom += 0.5;
+                stats.loyalty += 0.5;
+            }
         }
 
         function updateStatus() {
@@ -532,25 +696,44 @@
                            Math.pow(stats.loyalty - avgStat, 2);
             score += Math.max(0, 5 - variance / 10);
             
-            // 后期选择加成
-            score += lateGameBonus * 3;
+            // 决策连贯性加成
+            score += consistencyBonus * 3;
+            
+            // 道德积累加成
+            score += moralAccumulator * 0.5;
+            
+            // 情境记忆完成度加成（完成越多情境获得越高加成）
+            const situationCount = Object.values(situationMemory).filter(v => v).length;
+            score += situationCount * 2;
+            
+            // 因果链条加成：如果形成完整的英雄行为链
+            if (situationMemory.savedVillagers && situationMemory.helpedWounded && 
+                situationMemory.stayedWithLeader) {
+                score += 5; // 完整的英雄旅程加成
+            }
             
             return score;
         }
-
+        
         function determineEnding(score) {
-            // 结局判定：综合得分 + 各维度阈值检查
+            // 结局判定：综合得分 + 各维度阈值检查 + 情境记忆
             const hasHighCourage = stats.courage >= 6;
             const hasHighKindness = stats.kindness >= 6;
             const hasHighWisdom = stats.wisdom >= 6;
             const hasHighLoyalty = stats.loyalty >= 6;
             
-            // 完美结局：高综合得分且至少两个维度突出
-            if (score >= 25 && (hasHighCourage + hasHighKindness + hasHighWisdom + hasHighLoyalty) >= 2) {
+            const situationCount = Object.values(situationMemory).filter(v => v).length;
+            
+            // 完美结局：高综合得分 + 多维度突出 + 完整情境记忆
+            if (score >= 30 && 
+                (hasHighCourage + hasHighKindness + hasHighWisdom + hasHighLoyalty) >= 2 &&
+                situationCount >= 3) {
                 return '青山永念';
             }
-            // 良好结局：较高得分或有突出维度
-            else if (score >= 15 || (hasHighCourage + hasHighKindness + hasHighWisdom + hasHighLoyalty) >= 1) {
+            // 良好结局：较高得分或有突出维度或完成部分情境
+            else if (score >= 20 || 
+                     (hasHighCourage + hasHighKindness + hasHighWisdom + hasHighLoyalty) >= 1 ||
+                     situationCount >= 2) {
                 return '山河怅惘';
             }
             // 较差结局：低得分或有严重缺陷
