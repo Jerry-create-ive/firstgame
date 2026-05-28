@@ -516,14 +516,15 @@
                     const change = data.change;
                     spirit = data.new_spirit;
                     
-                    // 记录选择历史
+                    // 记录选择历史（包含评价）
                     choiceHistory.push({
                         node: currentNode,
                         choice: choice.text,
                         influence: influence,
                         weight: data.weight,
                         change: change,
-                        spiritAfter: spirit
+                        spiritAfter: spirit,
+                        evaluation: data.evaluation || ''
                     });
                 }
             } catch (error) {
@@ -536,13 +537,24 @@
                     spirit += 2;
                 }
                 
+                // 生成本地评价
+                let evaluation = '';
+                if (influence > 0) {
+                    evaluation = getLocalEvaluation(currentNode, 'positive');
+                } else if (influence < 0) {
+                    evaluation = getLocalEvaluation(currentNode, 'negative');
+                } else {
+                    evaluation = getLocalEvaluation(currentNode, 'neutral');
+                }
+                
                 choiceHistory.push({
                     node: currentNode,
                     choice: choice.text,
                     influence: influence,
                     weight: weight,
                     change: change,
-                    spiritAfter: spirit
+                    spiritAfter: spirit,
+                    evaluation: evaluation
                 });
             }
             
@@ -550,6 +562,62 @@
             updateStatus();
             updateBackground();
             loadScene();
+        }
+        
+        function getLocalEvaluation(node, type) {
+            const evaluations = {
+                1: {
+                    positive: '雨夜之中，你伸出援手。善良的种子，在泥泞中生根发芽。',
+                    neutral: '你选择了稳妥之路，既保护了自己，也尽到了职责。',
+                    negative: '军令如山，但人心更重。那一刻的催促，或许会成为心中的刺。'
+                },
+                2: {
+                    positive: '半块干粮，一份希望。你把生的机会留给了更需要的人。',
+                    neutral: '平分口粮，不偏不倚。乱世之中，这已是难得的公平。',
+                    negative: '战争面前，自保无可厚非。只是那份干粮的重量，是否会压在心头？'
+                },
+                3: {
+                    positive: '百姓是根，军队是叶。你用行动诠释了什么是人民子弟兵。',
+                    neutral: '服从命令是天职，但百姓的安危，始终牵动着你的心。',
+                    negative: '鸣枪引敌，虽属无奈。只是那些未能救下的面孔，是否会时常浮现？'
+                },
+                4: {
+                    positive: '明察秋毫，识破诡计。你的谨慎，守护了整个队伍的安全。',
+                    neutral: '将甄别之责交予首长，既尽职守，也显谦逊。',
+                    negative: '轻信于人，险些酿成大祸。战争之中，信任需要代价。'
+                },
+                5: {
+                    positive: '加固绳索，排除隐患。你的细致，让战友们安全通过险地。',
+                    neutral: '快速通过，虽有惊险，却也体现了军人的决断。',
+                    negative: '全面排查，稳妥至上。只是时间，往往是战争中最奢侈的东西。'
+                },
+                6: {
+                    positive: '留下掩护，断后阻击。你选择了危险，把生的希望留给战友。',
+                    neutral: '全员突围，共进退。这份凝聚力，是战胜强敌的关键。',
+                    negative: '托付农户，虽属无奈。只是那些伤员的命运，是否会让你牵挂？'
+                },
+                7: {
+                    positive: '主动请战，勇担断后。真正的勇士，敢于直面炮火与死亡。',
+                    neutral: '居中护卫，坚守职责。首长的安全，就是你的使命。',
+                    negative: '申请先行，人之常情。只是回望战场时，心中是否会有波澜？'
+                },
+                8: {
+                    positive: '劝说撤离，情深义重。你用勇气直面首长，用智慧守护英雄。',
+                    neutral: '誓死陪伴，同生共死。这份忠诚，感天动地。',
+                    negative: '护送他人，职责所在。只是那最后的时刻，你不在他身边。'
+                },
+                9: {
+                    positive: '舍身掩护，英雄本色。你用血肉之躯，诠释了什么是担当。',
+                    neutral: '大声警报，提醒战友。你的呼喊，或许能挽救更多生命。',
+                    negative: '本能躲避，人之天性。只是那一幕，会成为永远的遗憾。'
+                },
+                10: {
+                    positive: '振臂高呼，冲锋在前。将军的精神，在你身上得到传承。',
+                    neutral: '肃穆送别，含泪前行。带着将军的遗志，继续战斗。',
+                    negative: '沉默跟随，心如止水。只是那无声的背影，是否承载着太多沉重？'
+                }
+            };
+            return evaluations[node] && evaluations[node][type] ? evaluations[node][type] : '每一个选择，都有它的意义。';
         }
         
         function updateStatus() {
@@ -652,10 +720,37 @@
 
             background.style.backgroundImage = `url('${backgrounds[imageIndex]}')`;
             const statsPanel = generateStatsPanel();
+            
+            // 添加结局总评
+            const finalComment = data.ending ? data.ending.final_comment : getDefaultFinalComment(type);
+            
+            const finalCommentHtml = `
+            <div style="
+                background: rgba(196, 30, 58, 0.1);
+                border: 1px solid rgba(196, 30, 58, 0.3);
+                border-radius: 8px;
+                padding: 20px;
+                margin-top: 20px;
+                text-align: center;
+            ">
+                <div style="color: #ffd700; font-size: 0.9em; margin-bottom: 10px;">【最终评语】</div>
+                <div style="color: #e8e8e8; font-size: 1.1em; line-height: 1.8;">${finalComment}</div>
+            </div>
+            `;
 
             document.getElementById('end-title').textContent = title;
-            document.getElementById('end-content').innerHTML = content + statsPanel;
+            document.getElementById('end-content').innerHTML = content + finalCommentHtml + statsPanel;
             endScreen.style.display = 'flex';
+        }
+        
+        function getDefaultFinalComment(type) {
+            if (type === 'good') {
+                return '勇者无惧，仁者无敌。你用一次次的选择证明，平凡人也能铸就伟大。青山有幸埋忠骨，将军精神永存！';
+            } else if (type === 'neutral') {
+                return '恪尽职守，无愧于心。你的选择或许不够耀眼，但每一步都走得踏实。山河依旧，英雄永存心中。';
+            } else {
+                return '战争残酷，生存不易。只是有些选择，一旦做出，便再也无法回头。愿来生，能有勇气面对每一个抉择。';
+            }
         }
         
         function generateStatsPanel() {
@@ -730,20 +825,29 @@
             choiceHistory.forEach((choice, index) => {
                 const isPositive = choice.influence > 0;
                 const isNegative = choice.influence < 0;
+                const borderColor = isPositive ? '#4ade80' : isNegative ? '#f87171' : '#fbbf24';
+                const textColor = isPositive ? '#4ade80' : isNegative ? '#f87171' : '#fbbf24';
+                
                 panel += `
                     <div style="
-                        display: flex; 
-                        justify-content: space-between; 
-                        padding: 8px 12px; 
+                        padding: 12px; 
                         background: rgba(0,0,0,0.2);
-                        margin-bottom: 5px;
-                        border-radius: 4px;
-                        border-left: 3px solid ${isPositive ? '#4ade80' : isNegative ? '#f87171' : '#fbbf24'};
+                        margin-bottom: 10px;
+                        border-radius: 6px;
+                        border-left: 4px solid ${borderColor};
                     ">
-                        <span style="color: #e8e8e8; font-size: 0.9em;">节点${choice.node}</span>
-                        <span style="color: ${isPositive ? '#4ade80' : isNegative ? '#f87171' : '#fbbf24'}; font-size: 0.9em;">
-                            ${isPositive ? '+' : ''}${choice.change}
-                        </span>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <span style="color: #c41e3a; font-weight: bold;">节点${choice.node}</span>
+                            <span style="color: ${textColor}; font-weight: bold;">
+                                ${isPositive ? '+' : ''}${choice.change}
+                            </span>
+                        </div>
+                        <div style="color: #e8e8e8; font-size: 0.9em; margin-bottom: 6px; font-style: italic;">
+                            ${choice.choice}
+                        </div>
+                        <div style="color: #9ca3af; font-size: 0.85em; line-height: 1.5; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 8px;">
+                            <span style="color: #ffd700;">【评价】</span> ${choice.evaluation || '每一个选择，都有它的意义。'}
+                        </div>
                     </div>
                 `;
             });
