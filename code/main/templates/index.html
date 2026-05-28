@@ -492,31 +492,59 @@
             });
         }
 
-        function makeChoice(choice) {
+        async function makeChoice(choice) {
             const currentNode = visitedNodes.length + 1;
-            const weight = nodeWeights[currentNode] || 1;
-            
-            // 获取选项的精神值影响（正向为担当，负向为退缩）
             const influence = choice.spirit || 0;
             
-            // 应用节点权重计算实际变化
-            const change = influence * weight;
-            spirit += change;
-            
-            // 关键节点额外加成（节点7-10挺身而出获得额外加分）
-            if (currentNode >= 7 && influence > 0) {
-                spirit += 2; // 后期挺身而出额外加分，支持"心路转变"
+            // 调用后端API计算精神值变化
+            try {
+                const response = await fetch('/api/calculate-spirit/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        node: currentNode,
+                        influence: influence,
+                        current_spirit: spirit
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    const change = data.change;
+                    spirit = data.new_spirit;
+                    
+                    // 记录选择历史
+                    choiceHistory.push({
+                        node: currentNode,
+                        choice: choice.text,
+                        influence: influence,
+                        weight: data.weight,
+                        change: change,
+                        spiritAfter: spirit
+                    });
+                }
+            } catch (error) {
+                // 如果API调用失败，使用本地计算作为备用
+                const weight = nodeWeights[currentNode] || 1;
+                const change = influence * weight;
+                spirit += change;
+                
+                if (currentNode >= 7 && influence > 0) {
+                    spirit += 2;
+                }
+                
+                choiceHistory.push({
+                    node: currentNode,
+                    choice: choice.text,
+                    influence: influence,
+                    weight: weight,
+                    change: change,
+                    spiritAfter: spirit
+                });
             }
-            
-            // 记录选择历史
-            choiceHistory.push({
-                node: currentNode,
-                choice: choice.text,
-                influence: influence,
-                weight: weight,
-                change: change,
-                spiritAfter: spirit
-            });
             
             currentScene = choice.next;
             updateStatus();
@@ -580,25 +608,49 @@
             }, 400);
         }
 
-        function showEnding(type) {
+        async function showEnding(type) {
             const endScreen = document.getElementById('end-screen');
             const background = document.getElementById('background');
             let title = '', content = '';
+            let imageIndex = 14;
 
-            if (type === 'good') {
-                title = '结局一：青山永念';
-                content = '<p>你带着满身伤痕站在山岭之上，送别了左权将军。回望突围之路，每一次善意与担当都让你收获了真挚情谊。将军的精神万古长青，这段烽火记忆成为你一生最珍贵的念想。</p>';
-                background.style.backgroundImage = `url('${backgrounds[14]}')`;
-            } else if (type === 'neutral') {
-                title = '结局二：山河怅惘';
-                content = '<p>你恪守本分，做好了警卫员的职责。经历了战火的残酷与将星陨落的悲壮，心中满是沉甸甸的惋惜与敬意。</p>';
-                background.style.backgroundImage = `url('${backgrounds[15]}')`;
-            } else {
-                title = '结局三：半生愧悔';
-                content = '<p>你侥幸存活，可一路走来的退缩与犹豫成了终生的枷锁。每到雨夜，太行山上的身影便会闯入梦境，这份遗憾如影随形。</p>';
-                background.style.backgroundImage = `url('${backgrounds[16]}')`;
+            // 调用后端API判定结局
+            try {
+                const response = await fetch('/api/determine-ending/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        spirit: spirit
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success && data.ending) {
+                    title = data.ending.title;
+                    content = `<p>${data.ending.description}</p>`;
+                    imageIndex = data.ending.image_index;
+                }
+            } catch (error) {
+                // 如果API调用失败，使用本地判定作为备用
+                if (type === 'good') {
+                    title = '结局一：青山永念';
+                    content = '<p>你带着满身伤痕站在山岭之上，送别了左权将军。回望突围之路，每一次善意与担当都让你收获了真挚情谊。将军的精神万古长青，这段烽火记忆成为你一生最珍贵的念想。</p>';
+                    imageIndex = 14;
+                } else if (type === 'neutral') {
+                    title = '结局二：山河怅惘';
+                    content = '<p>你恪守本分，做好了警卫员的职责。经历了战火的残酷与将星陨落的悲壮，心中满是沉甸甸的惋惜与敬意。</p>';
+                    imageIndex = 15;
+                } else {
+                    title = '结局三：半生愧悔';
+                    content = '<p>你侥幸存活，可一路走来的退缩与犹豫成了终生的枷锁。每到雨夜，太行山上的身影便会闯入梦境，这份遗憾如影随形。</p>';
+                    imageIndex = 16;
+                }
             }
 
+            background.style.backgroundImage = `url('${backgrounds[imageIndex]}')`;
             const statsPanel = generateStatsPanel();
 
             document.getElementById('end-title').textContent = title;
