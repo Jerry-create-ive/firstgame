@@ -676,53 +676,32 @@
             }, 400);
         }
 
-        async function showEnding(type) {
+        function showEnding(type) {
             const endScreen = document.getElementById('end-screen');
             const background = document.getElementById('background');
             let title = '', content = '';
             let imageIndex = 14;
 
-            // 调用后端API判定结局
-            try {
-                const response = await fetch('/api/determine-ending/', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        spirit: spirit
-                    })
-                });
-                
-                const data = await response.json();
-                
-                if (data.success && data.ending) {
-                    title = data.ending.title;
-                    content = `<p>${data.ending.description}</p>`;
-                    imageIndex = data.ending.image_index;
-                }
-            } catch (error) {
-                // 如果API调用失败，使用本地判定作为备用
-                if (type === 'good') {
-                    title = '结局一：青山永念';
-                    content = '<p>你带着满身伤痕站在山岭之上，送别了左权将军。回望突围之路，每一次善意与担当都让你收获了真挚情谊。将军的精神万古长青，这段烽火记忆成为你一生最珍贵的念想。</p>';
-                    imageIndex = 14;
-                } else if (type === 'neutral') {
-                    title = '结局二：山河怅惘';
-                    content = '<p>你恪守本分，做好了警卫员的职责。经历了战火的残酷与将星陨落的悲壮，心中满是沉甸甸的惋惜与敬意。</p>';
-                    imageIndex = 15;
-                } else {
-                    title = '结局三：半生愧悔';
-                    content = '<p>你侥幸存活，可一路走来的退缩与犹豫成了终生的枷锁。每到雨夜，太行山上的身影便会闯入梦境，这份遗憾如影随形。</p>';
-                    imageIndex = 16;
-                }
+            // 直接使用本地判定逻辑
+            if (type === 'good') {
+                title = '结局一：青山永念';
+                content = '<p>你带着满身伤痕站在山岭之上，送别了左权将军。回望突围之路，每一次善意与担当都让你收获了真挚情谊。将军的精神万古长青，这段烽火记忆成为你一生最珍贵的念想。</p>';
+                imageIndex = 14;
+            } else if (type === 'neutral') {
+                title = '结局二：山河怅惘';
+                content = '<p>你恪守本分，做好了警卫员的职责。经历了战火的残酷与将星陨落的悲壮，心中满是沉甸甸的惋惜与敬意。</p>';
+                imageIndex = 15;
+            } else {
+                title = '结局三：半生愧悔';
+                content = '<p>你侥幸存活，可一路走来的退缩与犹豫成了终生的枷锁。每到雨夜，太行山上的身影便会闯入梦境，这份遗憾如影随形。</p>';
+                imageIndex = 16;
             }
 
             background.style.backgroundImage = `url('${backgrounds[imageIndex]}')`;
             const statsPanel = generateStatsPanel();
             
             // 添加结局总评
-            const finalComment = data.ending ? data.ending.final_comment : getDefaultFinalComment(type);
+            const finalComment = getDefaultFinalComment(type);
             
             const finalCommentHtml = `
             <div style="
@@ -754,111 +733,123 @@
         }
         
         function generateStatsPanel() {
-            let positiveChoices = 0;
-            let negativeChoices = 0;
-            let neutralChoices = 0;
-            
-            choiceHistory.forEach(choice => {
-                if (choice.influence > 0) positiveChoices++;
-                else if (choice.influence < 0) negativeChoices++;
-                else neutralChoices++;
-            });
-            
-            const maxSpirit = 5 * 4 + 4 * 2;
-            const minSpirit = -4 * 3.5;
-            const normalizedSpirit = Math.min(100, Math.max(0, ((spirit - minSpirit) / (maxSpirit - minSpirit)) * 100));
-            
-            let panel = `
-            <div id="stats-panel" style="
-                background: rgba(26, 26, 46, 0.95);
-                border: 1px solid rgba(196, 30, 58, 0.5);
-                border-radius: 12px;
-                padding: 25px;
-                margin-top: 30px;
-                text-align: left;
-                max-height: 400px;
-                overflow-y: auto;
-            ">
-                <h3 style="color: #c41e3a; text-align: center; margin-bottom: 20px; letter-spacing: 2px;">征程统计</h3>
+            try {
+                let positiveChoices = 0;
+                let negativeChoices = 0;
+                let neutralChoices = 0;
                 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
-                    <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 8px;">
-                        <div style="color: #ffd700; font-size: 0.9em;">最终精神值</div>
-                        <div style="font-size: 1.8em; font-weight: bold; color: ${spirit >= 15 ? '#4ade80' : spirit >= -5 ? '#fbbf24' : '#f87171'};">${spirit}</div>
-                    </div>
-                    <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 8px;">
-                        <div style="color: #ffd700; font-size: 0.9em;">选择总数</div>
-                        <div style="font-size: 1.8em; font-weight: bold; color: #e8e8e8;">${choiceHistory.length}</div>
-                    </div>
-                </div>
+                if (choiceHistory && choiceHistory.length > 0) {
+                    choiceHistory.forEach(choice => {
+                        if (choice && choice.influence > 0) positiveChoices++;
+                        else if (choice && choice.influence < 0) negativeChoices++;
+                        else neutralChoices++;
+                    });
+                }
                 
-                <div style="height: 20px; background: #2d2d44; border-radius: 10px; margin-bottom: 15px; overflow: hidden;">
-                    <div style="
-                        height: 100%;
-                        width: ${normalizedSpirit}%;
-                        background: linear-gradient(90deg, #c41e3a, #ffd700, #4ade80);
-                        border-radius: 10px;
-                        transition: width 1s ease;
-                    "></div>
-                </div>
+                const maxSpirit = 5 * 4 + 4 * 2;
+                const minSpirit = -4 * 3.5;
+                const normalizedSpirit = Math.min(100, Math.max(0, ((spirit - minSpirit) / (maxSpirit - minSpirit)) * 100));
                 
-                <div style="display: flex; justify-content: space-around; margin-bottom: 20px;">
-                    <div style="text-align: center;">
-                        <div style="color: #4ade80; font-size: 1.5em; font-weight: bold;">${positiveChoices}</div>
-                        <div style="color: #888; font-size: 0.8em;">担当选择</div>
+                let panel = `
+                <div id="stats-panel" style="
+                    background: rgba(26, 26, 46, 0.95);
+                    border: 1px solid rgba(196, 30, 58, 0.5);
+                    border-radius: 12px;
+                    padding: 25px;
+                    margin-top: 30px;
+                    text-align: left;
+                    max-height: 400px;
+                    overflow-y: auto;
+                ">
+                    <h3 style="color: #c41e3a; text-align: center; margin-bottom: 20px; letter-spacing: 2px;">征程统计</h3>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                        <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 8px;">
+                            <div style="color: #ffd700; font-size: 0.9em;">最终精神值</div>
+                            <div style="font-size: 1.8em; font-weight: bold; color: ${spirit >= 15 ? '#4ade80' : spirit >= -5 ? '#fbbf24' : '#f87171'};">${spirit}</div>
+                        </div>
+                        <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 8px;">
+                            <div style="color: #ffd700; font-size: 0.9em;">选择总数</div>
+                            <div style="font-size: 1.8em; font-weight: bold; color: #e8e8e8;">${choiceHistory ? choiceHistory.length : 0}</div>
+                        </div>
                     </div>
-                    <div style="text-align: center;">
-                        <div style="color: #fbbf24; font-size: 1.5em; font-weight: bold;">${neutralChoices}</div>
-                        <div style="color: #888; font-size: 0.8em;">中立选择</div>
+                    
+                    <div style="height: 20px; background: #2d2d44; border-radius: 10px; margin-bottom: 15px; overflow: hidden;">
+                        <div style="
+                            height: 100%;
+                            width: ${normalizedSpirit}%;
+                            background: linear-gradient(90deg, #c41e3a, #ffd700, #4ade80);
+                            border-radius: 10px;
+                            transition: width 1s ease;
+                        "></div>
                     </div>
-                    <div style="text-align: center;">
-                        <div style="color: #f87171; font-size: 1.5em; font-weight: bold;">${negativeChoices}</div>
-                        <div style="color: #888; font-size: 0.8em;">退缩选择</div>
+                    
+                    <div style="display: flex; justify-content: space-around; margin-bottom: 20px;">
+                        <div style="text-align: center;">
+                            <div style="color: #4ade80; font-size: 1.5em; font-weight: bold;">${positiveChoices}</div>
+                            <div style="color: #888; font-size: 0.8em;">担当选择</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="color: #fbbf24; font-size: 1.5em; font-weight: bold;">${neutralChoices}</div>
+                            <div style="color: #888; font-size: 0.8em;">中立选择</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="color: #f87171; font-size: 1.5em; font-weight: bold;">${negativeChoices}</div>
+                            <div style="color: #888; font-size: 0.8em;">退缩选择</div>
+                        </div>
                     </div>
-                </div>
+                    
+                    <div style="border-top: 1px solid rgba(196, 30, 58, 0.3); padding-top: 15px;">
+                        <div style="color: #ffd700; font-size: 0.9em; margin-bottom: 10px;">抉择历程</div>
+                        <div style="max-height: 150px; overflow-y: auto;">
+                `;
                 
-                <div style="border-top: 1px solid rgba(196, 30, 58, 0.3); padding-top: 15px;">
-                    <div style="color: #ffd700; font-size: 0.9em; margin-bottom: 10px;">抉择历程</div>
-                    <div style="max-height: 150px; overflow-y: auto;">
-            `;
-            
-            choiceHistory.forEach((choice, index) => {
-                const isPositive = choice.influence > 0;
-                const isNegative = choice.influence < 0;
-                const borderColor = isPositive ? '#4ade80' : isNegative ? '#f87171' : '#fbbf24';
-                const textColor = isPositive ? '#4ade80' : isNegative ? '#f87171' : '#fbbf24';
+                if (choiceHistory && choiceHistory.length > 0) {
+                    choiceHistory.forEach((choice, index) => {
+                        if (!choice) return;
+                        const isPositive = choice.influence > 0;
+                        const isNegative = choice.influence < 0;
+                        const borderColor = isPositive ? '#4ade80' : isNegative ? '#f87171' : '#fbbf24';
+                        const textColor = isPositive ? '#4ade80' : isNegative ? '#f87171' : '#fbbf24';
+                        
+                        panel += `
+                            <div style="
+                                padding: 12px; 
+                                background: rgba(0,0,0,0.2);
+                                margin-bottom: 10px;
+                                border-radius: 6px;
+                                border-left: 4px solid ${borderColor};
+                            ">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                    <span style="color: #c41e3a; font-weight: bold;">节点${choice.node}</span>
+                                    <span style="color: ${textColor}; font-weight: bold;">
+                                        ${isPositive ? '+' : ''}${choice.change}
+                                    </span>
+                                </div>
+                                <div style="color: #e8e8e8; font-size: 0.9em; margin-bottom: 6px; font-style: italic;">
+                                    ${choice.choice}
+                                </div>
+                                <div style="color: #9ca3af; font-size: 0.85em; line-height: 1.5; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 8px;">
+                                    <span style="color: #ffd700;">【评价】</span> ${choice.evaluation || '每一个选择，都有它的意义。'}
+                                </div>
+                            </div>
+                        `;
+                    });
+                } else {
+                    panel += '<div style="color: #888; text-align: center;">暂无选择记录</div>';
+                }
                 
                 panel += `
-                    <div style="
-                        padding: 12px; 
-                        background: rgba(0,0,0,0.2);
-                        margin-bottom: 10px;
-                        border-radius: 6px;
-                        border-left: 4px solid ${borderColor};
-                    ">
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                            <span style="color: #c41e3a; font-weight: bold;">节点${choice.node}</span>
-                            <span style="color: ${textColor}; font-weight: bold;">
-                                ${isPositive ? '+' : ''}${choice.change}
-                            </span>
                         </div>
-                        <div style="color: #e8e8e8; font-size: 0.9em; margin-bottom: 6px; font-style: italic;">
-                            ${choice.choice}
-                        </div>
-                        <div style="color: #9ca3af; font-size: 0.85em; line-height: 1.5; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 8px;">
-                            <span style="color: #ffd700;">【评价】</span> ${choice.evaluation || '每一个选择，都有它的意义。'}
-                        </div>
-                    </div>
-                `;
-            });
-            
-            panel += `
                     </div>
                 </div>
-            </div>
-            `;
-            
-            return panel;
+                `;
+                
+                return panel;
+            } catch (e) {
+                console.error('generateStatsPanel error:', e);
+                return '<div style="color: #f87171;">统计面板加载失败</div>';
+            }
         }
 
         document.getElementById('text-box').addEventListener('click', skipTyping);
